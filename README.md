@@ -37,20 +37,21 @@
 ## 🛠️ Tech Stack
 
 ### 💻 Frontend
-- **React.js** – UI framework
-- **Framer Motion** – Animations
-- **Firebase Authentication** – Secure login/signup
-- **Token-based Auth** – Protected user access
-- **Smooth Scroll** – Enhanced UX navigation
+- ⚛️ **React.js** – UI framework
+- 🎞️ **Framer Motion** – Animations
+- 🔐 **Firebase Authentication** – Secure login/signup
+- 🪪 **Token-based Auth** – Protected user access
+- 🌀 **Smooth Scroll** – Enhanced UX navigation
 
 ### 🔧 Backend
-- **Node.js + Express.js** – REST API & server
-- **MongoDB** – Stores farmers, items, posts, etc.
-- **Firebase Admin SDK** – Verifies user tokens server-side
-- **Cloudinary** – Stores uploaded product images
-- **Multer** – Handles multipart image uploads
-- **Nodemailer** – Sends email to admin when a product is submitted
-- **CORS** – Connects frontend and backend across origins
+- 🖥️ **Node.js + Express.js** – REST API & server
+- 🍃 **MongoDB** – Stores farmers, items, posts, etc.
+- 🛡️ **Firebase Admin SDK** – Verifies user tokens server-side
+- 🖼️ **Cloudinary** – Stores uploaded product images
+- 📦 **Multer** – Handles multipart image uploads
+- 📧 **Nodemailer** – Sends email to admin when a product is submitted
+- 🔗 **CORS** – Connects frontend and backend across origins
+
 
 ---
 
