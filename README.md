@@ -18,19 +18,15 @@
 
 ## 📸 Screenshots
 
-> Add your screenshots in the `screenshots/` folder and replace the paths below.
 
 ### 🏠 Homepage
-![Homepage](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20(2524).png?raw=true)![image](https://github.com/user-attachments/assets/12785b33-51d7-4929-b740-0038cced6ccb)
-)
+![Homepage](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20(2524).png?raw=true)
 
 ### 📊 Farmer Dashboard
-![Dashboard](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20(2519).png?raw=true![image](https://github.com/user-attachments/assets/8aa7df06-d667-4502-b71f-18c5d247e382)
-)
+![Dashboard](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20(2519).png?raw=true)
 
 ### 💬 Community Hub
-![Community](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20(2533).png?raw=true)![image](https://github.com/user-attachments/assets/6d96ea58-d720-4b04-899d-ccb8d8d35750)
-)
+![Community](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20(2533).png?raw=true)
 
 ---
 
