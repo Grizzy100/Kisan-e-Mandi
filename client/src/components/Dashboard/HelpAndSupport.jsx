@@ -2,23 +2,26 @@ import { useState } from "react";
 import RaiseTicketForm from "./RaiseTicketForm";
 
 const HelpAndSupport = () => {
-  const [showForm, setShowForm] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  return showForm ? (
-    <RaiseTicketForm />
-  ) : (
-    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="hover:bg-green-50 cursor-pointer p-6 rounded shadow" onClick={() => alert("Calling support...")}>
-        <h3 className="text-xl font-bold text-green-700">Call Us</h3>
-        <p>📞 +91 98765 43210</p>
-      </div>
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-800">Crop Verification</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Enlist your crop securely for buyers.
+            <span className="ml-2">📞 +91 98765 43210</span>
+          </p>
+        </div>
 
-      <div
-        className="hover:bg-green-50 cursor-pointer p-6 rounded shadow"
-        onClick={() => setShowForm(true)}
-      >
-        <h3 className="text-xl font-bold text-green-700">Raise a Ticket</h3>
-        <p>Click to submit a support request</p>
+        {/* Content */}
+        <RaiseTicketForm
+          onTicketRaised={() => {
+            setRefreshKey((k) => k + 1);
+          }}
+        />
       </div>
     </div>
   );

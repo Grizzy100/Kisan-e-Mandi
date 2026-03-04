@@ -1,28 +1,41 @@
 // src/api/axios.js
 import axios from "axios";
-import { getAuth } from "firebase/auth"; // ✅ import Firebase Auth
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// ✅ Interceptor: add Firebase ID token to each request
+// ── Request Interceptor: attach JWT to every request ───────────
 axiosInstance.interceptors.request.use(
-  async (config) => {
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    if (currentUser) {
-      const idToken = await currentUser.getIdToken();
-      config.headers.Authorization = `Bearer ${idToken}`;
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+// ── Response Interceptor: handle expired / invalid JWT ─────────
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token has expired or is invalid — clear storage and redirect to login
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // Avoid redirect loops if we're already on the login page
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;
+

@@ -5,3 +5,8 @@ export const createSupportTicket = async (data) => {
   const res = await axios.post("/support", data);
   return res.data;
 };
+
+export const getUserTickets = async () => {
+  const res = await axios.get("/support/my-tickets");
+  return res.data.tickets;
+};

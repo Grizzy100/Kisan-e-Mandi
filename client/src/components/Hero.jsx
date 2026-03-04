@@ -56,7 +56,7 @@ const Hero = () => {
 
             <div className="flex flex-col md:flex-row gap-4 pt-4 mb-6 items-center md:items-start">
               <Link
-                to="/get-started"
+                to="/register"
                 className="group bg-white text-green-600 px-6 md:px-5 md:py-4 sm:px-8 py-3 sm:py-4 rounded-full font-semibold hover:bg-green-50 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
                 <span>Get Started</span>

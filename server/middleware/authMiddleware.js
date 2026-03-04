@@ -1,35 +1,49 @@
-import admin from "../config/firebase.js";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
+// ─────────────────────────────────────────────────────────────────
+// protect – verifies the JWT and attaches req.user
+// Usage: router.get("/protected-route", protect, handler)
+// ─────────────────────────────────────────────────────────────────
 export const protect = async (req, res, next) => {
-  let token;
+  const authHeader = req.headers.authorization;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Not authorized – no token provided" });
   }
 
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = {
-      uid: decodedToken.uid,
-      email: decodedToken.email,
-      name: decodedToken.name,
-      picture: decodedToken.picture,
-    };
+    // Exclude sensitive fields from the attached user object
+    req.user = await User.findById(decoded.id).select(
+      "-password -emailVerifyToken -resetPasswordToken"
+    );
 
-    console.log("Incoming token:", token);
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized – user no longer exists" });
+    }
 
     next();
   } catch (error) {
-    console.error("Token failed:", error);
-
-    res.status(401).json({ message: "Unauthorized" });
+    console.error("JWT verification failed:", error.message);
+    return res.status(401).json({ message: "Not authorized – token is invalid or expired" });
   }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// authorizeRoles – restricts access to specific roles
+// Usage: router.get("/admin", protect, authorizeRoles("admin"), handler)
+// ─────────────────────────────────────────────────────────────────
+export const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `Access denied – role '${req.user?.role}' is not permitted`,
+      });
+    }
+    next();
+  };
 };

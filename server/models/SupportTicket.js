@@ -2,32 +2,47 @@ import mongoose from "mongoose";
 
 const supportTicketSchema = new mongoose.Schema(
   {
-    imageUrl: {
-      type: String, // Cloudinary URL of the uploaded image
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    cropType: {
+    email: {
       type: String,
       required: true,
     },
-    cropName: {
+    category: {
       type: String,
+      enum: ["Wheat", "Rice", "Vegetables", "Fruits", "Other"],
       required: true,
     },
-    submissionDate: {
-      type: Date,
-      default: Date.now,
-    },
-    negotiatedPrice: {
-      type: Number,
-      required: false,
+    subject: {
+      type: String,
+      required: true,
+      trim: true,
     },
     description: {
       type: String,
       required: true,
     },
-    userId: {
-      type: String, // Firebase UID
+    price: {
+      type: Number,
       required: true,
+      min: 0,
+    },
+    mediaUrl: {
+      type: String,
+      default: "",
+    },
+    mediaType: {
+      type: String,
+      enum: ["image", "video"],
+      default: "image",
+    },
+    status: {
+      type: String,
+      enum: ["open", "in-progress", "resolved", "rejected"],
+      default: "open",
     },
   },
   { timestamps: true }

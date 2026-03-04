@@ -8,10 +8,11 @@ import {
   MdSettings,
   MdCreditCard,
   MdLogout,
+  MdAdminPanelSettings,
+  MdPerson,
 } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getAuth, signOut } from "firebase/auth";
 import { toast } from "react-toastify";
 
 export function AppSidebar({
@@ -25,6 +26,9 @@ export function AppSidebar({
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = user?.role === "admin";
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
@@ -37,10 +41,12 @@ export function AppSidebar({
 
   const menuItems = [
     { title: "Dashboard", key: "dashboard", icon: MdDashboard },
+    { title: "My Activity", key: "my", icon: MdPerson },
     { title: "Items", key: "item", icon: MdShoppingCart, badge: "10" },
     { title: "Help & Support", key: "help", icon: MdHelp },
     { title: "Orders", key: "orders", icon: MdHistory },
     { title: "Community", key: "community", icon: MdGroup },
+    ...(isAdmin ? [{ title: "Admin Approval", key: "admin", icon: MdAdminPanelSettings }] : []),
   ];
 
   const settingsItems = [
@@ -71,10 +77,9 @@ export function AppSidebar({
     },
   };
 
-  const handleLogout = async () => {
-    const auth = getAuth();
-    await signOut(auth);
+  const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     toast.success("Logged out successfully 👋");
     navigate("/login");
   };
@@ -88,11 +93,10 @@ export function AppSidebar({
             onSectionChange(item.key);
             if (isMobile) setIsOpen(false);
           }}
-          className={`flex items-center justify-between px-2 py-2 sm:px-4 sm:py-3 rounded-lg w-full text-[11px] sm:text-sm transition-all duration-300 ${
-            isActive
-              ? "bg-gradient-to-br from-green-500 to-green-700 text-white shadow"
-              : "text-gray-600 hover:bg-gray-100 hover:text-green-700"
-          } ${isMinimized ? "justify-center px-0" : ""}`}
+          className={`flex items-center justify-between px-2 py-2 sm:px-4 sm:py-3 rounded-lg w-full text-[11px] sm:text-sm transition-all duration-300 ${isActive
+            ? "bg-gradient-to-br from-green-500 to-green-700 text-white shadow"
+            : "text-gray-600 hover:bg-gray-100 hover:text-green-700"
+            } ${isMinimized ? "justify-center px-0" : ""}`}
         >
           <div className="flex items-center gap-2 sm:gap-3">
             <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -189,11 +193,10 @@ export function AppSidebar({
           <div className="relative group">
             <button
               onClick={handleLogout}
-              className={`flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-lg w-full text-[11px] sm:text-sm transition-all duration-200 ${
-                currentSection === "logout"
-                  ? "bg-gradient-to-br from-red-500 to-red-700 text-white shadow"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-red-600"
-              } ${isMinimized ? "justify-center px-0" : ""}`}
+              className={`flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-lg w-full text-[11px] sm:text-sm transition-all duration-200 ${currentSection === "logout"
+                ? "bg-gradient-to-br from-red-500 to-red-700 text-white shadow"
+                : "text-gray-600 hover:bg-gray-100 hover:text-red-600"
+                } ${isMinimized ? "justify-center px-0" : ""}`}
             >
               <MdLogout className="w-4 h-4 sm:w-5 sm:h-5" />
               {!isMinimized && <span className="font-medium">Logout</span>}

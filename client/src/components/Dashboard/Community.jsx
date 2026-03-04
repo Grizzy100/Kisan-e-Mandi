@@ -158,92 +158,123 @@
 
 // Community.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   MdAdd, MdClose, MdImage, MdPerson, MdLocationOn,
-  MdDescription, MdTrendingUp, MdGroup, MdFavorite
+  MdDescription, MdTrendingUp, MdGroup, MdFavorite,
+  MdVideoLibrary, MdPerson2,
 } from "react-icons/md";
 import { FarmerPost } from "./FarmerPost";
-import { getAllPosts } from "../../api/postAPI";
-import { getIdToken } from "firebase/auth";
-import { auth } from "../../firebase";
+import { getAllPosts, getMyPosts, createPost } from "../../api/postAPI";
+import axiosInstance from "../../api/axios.js";
 
+const currentUserId = JSON.parse(localStorage.getItem("user") || "{}")?._id;
 const Community = () => {
+
   const [showModal, setShowModal] = useState(false);
   const [posts, setPosts] = useState([]);
+  const [myPosts, setMyPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("all");
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
-      const fetchedPosts = await getAllPosts();
-      setPosts(fetchedPosts);
+      const fetched = await getAllPosts();
+      // Guard: only posts with a valid _id are safe to render
+      setPosts(fetched.filter((p) => p._id));
     } catch (err) {
       console.error("Error fetching posts:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleNewPost = async (formData) => {
+  const fetchMyPosts = useCallback(async () => {
     try {
-      let imageUrl = "";
-      if (formData.image) {
-        const cloudData = new FormData();
-        cloudData.append("file", formData.image);
-        cloudData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_PRESET);
-        cloudData.append("cloud_name", import.meta.env.VITE_CLOUDINARY_CLOUDNAME);
-
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUDNAME}/image/upload`,
-          {
-            method: "POST",
-            body: cloudData,
-          }
-        );
-        const img = await res.json();
-        imageUrl = img.url;
-      }
-
-      const token = await getIdToken(auth.currentUser, true);
-      const payload = {
-        name: formData.author,
-        description: formData.content,
-        location: formData.location,
-        imageUrl,
-      };
-
-      const response = await fetch("http://localhost:3000/api/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || "Post creation failed");
-      }
-
-      const { post: newPost } = await response.json();
-      setPosts((prev) => [newPost, ...prev]);
-      setShowModal(false);
+      const fetched = await getMyPosts();
+      setMyPosts(fetched.filter((p) => p._id));
     } catch (err) {
-      console.error("Error creating post:", err);
+      console.error("Error fetching my posts:", err);
     }
-  };
+  }, []);
 
-  const filters = [
+  useEffect(() => {
+    fetchPosts();
+    fetchMyPosts();
+  }, [fetchPosts, fetchMyPosts]);
+
+  const tabs = [
     { id: "all", label: "All Posts", icon: MdGroup },
     { id: "trending", label: "Trending", icon: MdTrendingUp },
     { id: "popular", label: "Popular", icon: MdFavorite },
+    { id: "mine", label: "My Posts", icon: MdPerson2 },
   ];
+
+  const displayPosts = (() => {
+    if (activeTab === "mine") return myPosts;
+    if (activeTab === "trending") return [...posts].sort((a, b) => (b.commentsCount || 0) - (a.commentsCount || 0));
+    if (activeTab === "popular") return [...posts].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+    return posts; // "all"
+  })();
+
+  const handleNewPost = async (formData) => {
+    try {
+      let mediaUrl = "";
+      let mediaType = "image";
+
+      if (formData.media) {
+        const isVideo = formData.media.type.startsWith("video");
+        mediaType = isVideo ? "video" : "image";
+
+        // 1. Get signed credentials
+        const signRes = await axiosInstance.get("/upload/sign");
+        const signData = signRes.data;
+
+        // 2. Upload to Cloudinary securely
+        const cloudData = new FormData();
+        cloudData.append("file", formData.media);
+        cloudData.append("api_key", signData.apiKey);
+        cloudData.append("timestamp", signData.timestamp);
+        cloudData.append("signature", signData.signature);
+        cloudData.append("folder", signData.folder);
+
+        const uploadType = isVideo ? "video" : "image";
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${signData.cloudName}/${uploadType}/upload`,
+          { method: "POST", body: cloudData }
+        );
+        const uploaded = await res.json();
+        if (!uploaded.secure_url) {
+          console.error("Cloudinary upload failed:", uploaded);
+          alert("Media upload failed. Please try again.");
+          return;
+        }
+        mediaUrl = uploaded.secure_url;
+      }
+
+      const payload = {
+        name: (formData.content || "").substring(0, 60) || "Community Post",
+        description: formData.content,
+        location: formData.location,
+        mediaUrl,
+        mediaType,
+      };
+
+      // Backend returns { message, post } — extract the actual post
+      const result = await createPost(payload);
+      const newPost = result.post || result;
+      if (newPost?._id) {
+        setPosts((prev) => [newPost, ...prev]);
+        setMyPosts((prev) => [newPost, ...prev]); // show in My Posts tab immediately
+        setActiveTab("mine"); // switch to My Posts so farmer can see their new post
+      }
+      setShowModal(false);
+    } catch (err) {
+      console.error("Error creating post:", err);
+      alert("Failed to create post. Make sure you are logged in.");
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50/30 to-emerald-50/50 relative overflow-hidden">
@@ -266,20 +297,24 @@ const Community = () => {
             Connect with fellow farmers, share your journey, and grow together.
           </p>
 
-          {/* Filters */}
+          {/* Tabs */}
           <div className="flex flex-wrap justify-center gap-2">
-            {filters.map((filter) => (
+            {tabs.map((tab) => (
               <button
-                key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
-                className={`flex items-center gap-2 px-4 py-2 sm:px-3 sm:py-1 rounded-2xl font-medium text-sm sm:text-xs transition-all duration-300 ${
-                  activeFilter === filter.id
-                    ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md scale-105"
-                    : "bg-white/80 text-gray-700 hover:bg-white hover:shadow-sm border border-white/20"
-                }`}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 sm:px-3 sm:py-1 rounded-2xl font-medium text-sm sm:text-xs transition-all duration-300 ${activeTab === tab.id
+                  ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md scale-105"
+                  : "bg-white/80 text-gray-700 hover:bg-white hover:shadow-sm border border-white/20"
+                  }`}
               >
-                <filter.icon className="w-4 h-4 sm:w-3 sm:h-3" />
-                {filter.label}
+                <tab.icon className="w-4 h-4 sm:w-3 sm:h-3" />
+                {tab.label}
+                {tab.id === "mine" && myPosts.length > 0 && (
+                  <span className="ml-0.5 bg-green-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                    {myPosts.length}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -296,7 +331,7 @@ const Community = () => {
               <p className="text-gray-600 font-semibold mt-6 text-lg">Loading community posts...</p>
               <p className="text-gray-500 text-sm mt-2">Gathering the latest from our community</p>
             </div>
-          ) : posts.length === 0 ? (
+          ) : displayPosts.length === 0 ? (
             <div className="text-center py-20">
               <div className="relative inline-flex items-center justify-center w-32 h-32 mb-8">
                 <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full animate-pulse"></div>
@@ -304,9 +339,13 @@ const Community = () => {
                   <MdDescription className="w-12 h-12 text-white" />
                 </div>
               </div>
-              <h3 className="text-2xl sm:text-xl font-bold text-gray-800 mb-4">Start the Conversation</h3>
+              <h3 className="text-2xl sm:text-xl font-bold text-gray-800 mb-4">
+                {activeTab === "mine" ? "You haven't posted yet" : "Start the Conversation"}
+              </h3>
               <p className="text-gray-600 text-base sm:text-sm mb-8 max-w-md mx-auto">
-                Be the first to share your farming journey and inspire others!
+                {activeTab === "mine"
+                  ? "Share your farming journey — your posts will appear here."
+                  : "Be the first to share your farming journey and inspire others!"}
               </p>
               <button
                 onClick={() => setShowModal(true)}
@@ -321,7 +360,7 @@ const Community = () => {
           ) : (
             <div className="space-y-8">
               <div className="grid gap-6 sm:gap-4">
-                {posts.map((post, index) => (
+                {displayPosts.map((post, index) => (
                   <div
                     key={post._id}
                     className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
@@ -387,22 +426,31 @@ const Community = () => {
 
 
 const PostForm = ({ onSubmit, onCancel }) => {
-  const [form, setForm] = useState({ author: "", location: "", content: "", image: null });
-  const [imagePreview, setImagePreview] = useState(null);
+  const [form, setForm] = useState({
+    content: "", location: "", media: null,
+  });
+  const [mediaPreview, setMediaPreview] = useState(null);
+  const [mediaIsVideo, setMediaIsVideo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "image" && files?.[0]) handleImageUpload(files[0]);
+    if (name === "media" && files?.[0]) handleMediaUpload(files[0]);
     else setForm({ ...form, [name]: value });
   };
 
-  const handleImageUpload = (file) => {
-    setForm({ ...form, image: file });
-    const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target.result);
-    reader.readAsDataURL(file);
+  const handleMediaUpload = (file) => {
+    const isVideo = file.type.startsWith("video");
+    setMediaIsVideo(isVideo);
+    setForm({ ...form, media: file });
+    if (isVideo) {
+      setMediaPreview(URL.createObjectURL(file));
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => setMediaPreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleDrag = (e) => {
@@ -415,17 +463,18 @@ const PostForm = ({ onSubmit, onCancel }) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files?.[0]) handleImageUpload(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files?.[0]) handleMediaUpload(e.dataTransfer.files[0]);
   };
 
-  const removeImage = () => {
-    setForm({ ...form, image: null });
-    setImagePreview(null);
+  const removeMedia = () => {
+    setForm({ ...form, media: null });
+    setMediaPreview(null);
+    setMediaIsVideo(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.author || !form.content) return;
+    if (!form.content) return;
     setIsSubmitting(true);
     await onSubmit(form);
     setIsSubmitting(false);
@@ -433,110 +482,82 @@ const PostForm = ({ onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-4">
+      {/* Media Upload */}
       <div className="space-y-3">
-        <label htmlFor="image" className="text-base sm:text-sm font-semibold text-gray-800 flex items-center gap-2">
+        <label htmlFor="media" className="text-base sm:text-sm font-semibold text-gray-800 flex items-center gap-2">
           <MdImage className="text-green-600" />
-          Add Visual Content
+          Add Photo or Video
         </label>
-        {imagePreview ? (
+        {mediaPreview ? (
           <div className="relative group">
-            <img src={imagePreview} alt="Preview" className="w-full h-52 object-cover rounded-xl border" />
+            {mediaIsVideo ? (
+              <video src={mediaPreview} controls className="w-full h-52 object-cover rounded-xl border bg-black" />
+            ) : (
+              <img src={mediaPreview} alt="Preview" className="w-full h-52 object-cover rounded-xl border" />
+            )}
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center">
-              <button
-                type="button"
-                onClick={removeImage}
-                className="w-10 h-10 bg-red-500 text-white rounded-xl hover:bg-red-600"
-              >
-                <MdClose />
+              <button type="button" onClick={removeMedia} className="w-10 h-10 bg-red-500 text-white rounded-xl hover:bg-red-600 flex items-center justify-center">
+                <MdClose className="w-5 h-5" />
               </button>
             </div>
           </div>
         ) : (
           <div
-            className={`border-2 border-dashed rounded-xl p-6 text-center transition ${
-              dragActive ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-400"
-            }`}
+            className={`border-2 border-dashed rounded-xl p-6 text-center transition ${dragActive ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-400"}`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            <label htmlFor="image" className="cursor-pointer block text-sm sm:text-xs text-gray-600">
-              <div className="flex justify-center mb-2">
-                <MdImage className="text-green-500 w-6 h-6 sm:w-5 sm:h-5" />
+            <label htmlFor="media" className="cursor-pointer block text-sm sm:text-xs text-gray-600">
+              <div className="flex justify-center gap-3 mb-2">
+                <MdImage className="text-green-500 w-6 h-6" />
+                <MdVideoLibrary className="text-blue-500 w-6 h-6" />
               </div>
-              <span className="text-green-600 font-medium">Click to upload</span> or drag & drop
-              <input type="file" id="image" name="image" accept="image/*" onChange={handleChange} className="hidden" />
-              <p className="text-xs text-gray-400 mt-2">PNG, JPG, or GIF (max 10MB)</p>
+              <span className="text-green-600 font-medium">Click to upload</span> or drag &amp; drop
+              <input type="file" id="media" name="media" accept="image/*,video/mp4,video/webm,video/mov" onChange={handleChange} className="hidden" />
+              <p className="text-xs text-gray-400 mt-2">PNG, JPG, GIF, MP4, WebM (max 50MB)</p>
             </label>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1">
-            <MdPerson className="inline text-green-600 mr-1" />
-            Your Name
-          </label>
-          <input
-            id="author"
-            name="author"
-            type="text"
-            value={form.author}
-            onChange={handleChange}
-            className="w-full px-4 py-2 sm:py-1.5 border rounded-lg text-sm sm:text-xs"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-            <MdLocationOn className="inline text-green-600 mr-1" />
-            Location
-          </label>
-          <input
-            id="location"
-            name="location"
-            type="text"
-            value={form.location}
-            onChange={handleChange}
-            className="w-full px-4 py-2 sm:py-1.5 border rounded-lg text-sm sm:text-xs"
-          />
-        </div>
+      {/* Location */}
+      <div>
+        <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+          <MdLocationOn className="inline text-green-600 mr-1" />
+          Location
+        </label>
+        <input
+          id="location" name="location" type="text" value={form.location}
+          onChange={handleChange} placeholder="City, State"
+          className="w-full px-4 py-2 sm:py-1.5 border rounded-lg text-sm sm:text-xs"
+        />
       </div>
 
+      {/* Content */}
       <div>
         <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
           <MdDescription className="inline text-green-600 mr-1" />
           Share Your Thoughts
         </label>
         <textarea
-          id="content"
-          name="content"
-          rows={4}
-          maxLength={500}
-          value={form.content}
-          onChange={handleChange}
+          id="content" name="content" rows={4} maxLength={1000}
+          value={form.content} onChange={handleChange}
+          placeholder="Share your farming experience, ask a question, or inspire others..."
           className="w-full px-4 py-2 sm:py-1.5 border rounded-lg text-sm sm:text-xs resize-none"
           required
         />
-        <div className="text-right text-xs text-gray-500 mt-1">{form.content.length}/500</div>
+        <div className="text-right text-xs text-gray-500 mt-1">{form.content.length}/1000</div>
       </div>
 
+      {/* Actions */}
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-6 py-2 sm:px-4 sm:py-1.5 text-sm sm:text-xs border rounded-lg text-gray-700 hover:bg-gray-100"
-        >
+        <button type="button" onClick={onCancel} className="px-6 py-2 sm:px-4 sm:py-1.5 text-sm sm:text-xs border rounded-lg text-gray-700 hover:bg-gray-100">
           Cancel
         </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-8 py-2 sm:px-5 sm:py-1.5 text-sm sm:text-xs bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:scale-105 transition disabled:opacity-50"
-        >
-          {isSubmitting ? "Publishing..." : "Publish"}
+        <button type="submit" disabled={isSubmitting} className="px-8 py-2 sm:px-5 sm:py-1.5 text-sm sm:text-xs bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:scale-105 transition disabled:opacity-50">
+          {isSubmitting ? "Publishing..." : "Publish Post"}
         </button>
       </div>
     </form>

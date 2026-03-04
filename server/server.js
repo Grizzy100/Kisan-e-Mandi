@@ -10,8 +10,8 @@ import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
-
-// import itemRoutes from "./routes/itemRoutes.js"; // if needed later
+import itemRoutes from "./routes/itemRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 // Connect to MongoDB
 connectDB();
@@ -37,11 +37,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/support", supportRoutes);
-// app.use("/api/items", itemRoutes); // optional placeholder
+app.use("/api/items", itemRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Central Error Handling
 app.use(errorHandler);
 
 // Start Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

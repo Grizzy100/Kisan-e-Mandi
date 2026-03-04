@@ -4,13 +4,24 @@ import cloudinary from "../config/cloudinary.js";
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "kisan-e-mandi-posts",
-    allowed_formats: ["jpg", "jpeg", "png"],
-    transformation: [{ width: 800, height: 600, crop: "limit" }],
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith("video/");
+    return {
+      folder: "kisan-e-mandi-posts",
+      resource_type: isVideo ? "video" : "image",
+      allowed_formats: isVideo
+        ? ["mp4", "webm", "mov", "avi"]
+        : ["jpg", "jpeg", "png", "gif", "webp"],
+      transformation: isVideo
+        ? [{ quality: "auto", fetch_format: "mp4" }]
+        : [{ width: 1200, height: 900, crop: "limit", quality: "auto" }],
+    };
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
+});
 
 export default upload;

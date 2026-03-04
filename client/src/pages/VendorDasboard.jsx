@@ -5,6 +5,8 @@ import HelpAndSupport from "../components/Dashboard/HelpandSupport";
 import Community from "../components/Dashboard/Community";
 import Item from "../components/Dashboard/Item/Item";
 import { DashboardContent } from "../components/Dashboard/DashBoardContent";
+import AdminApproval from "../components/Dashboard/AdminApproval";
+import MySection from "../components/Dashboard/MySection";
 import Lenis from "@studio-freight/lenis";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -55,6 +57,10 @@ const VendorDashboard = () => {
         return <Community />;
       case "item":
         return <Item />;
+      case "admin":
+        return <AdminApproval />;
+      case "my":
+        return <MySection />;
       case "dashboard":
       default:
         return <DashboardContent />;

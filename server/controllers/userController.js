@@ -5,7 +5,7 @@ import User from "../models/User.js";
  */
 export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -23,8 +23,8 @@ export const updateCurrentUser = async (req, res) => {
   try {
     const { name, email } = req.body;
 
-    const user = await User.findOneAndUpdate(
-      { uid: req.user.uid },
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
       { name, email },
       { new: true }
     );

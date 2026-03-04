@@ -18,7 +18,9 @@ const Navbar = ({ hasPassedHero }) => {
     { name: "About", path: "/about", icon: <FiInfo /> },
   ];
 
-  const handleVendorClick = () => navigate("/login");
+  const handleVendorClick = () => navigate("/register");
+  const handleLoginClick = () => navigate("/login");
+  const handleGetStartedClick = () => navigate("/register");
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -45,13 +47,15 @@ const Navbar = ({ hasPassedHero }) => {
         >
           {menuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
         </button>
-
-        <button
-          onClick={handleVendorClick}
-          className={`text-xs font-sora px-4 py-1.5 rounded-full border transition ${navBtnClass}`}
-        >
-          Become Vendor
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleLoginClick}
+            className={`text-xs font-sora px-4 py-1.5 rounded-full border transition ${navBtnClass}`}
+          >
+            Login
+          </button>
+  
+        </div>
       </div>
 
       {/* Tablet */}
@@ -71,12 +75,15 @@ const Navbar = ({ hasPassedHero }) => {
             </Link>
           ))}
         </div>
-        <button
-          onClick={handleVendorClick}
-          className={`px-4 py-2 rounded-full font-sora text-sm border transition ${navBtnClass}`}
-        >
-          Become a Vendor
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleLoginClick}
+            className={`px-4 py-2 rounded-full font-sora text-sm border transition ${navBtnClass}`}
+          >
+            Login
+          </button>
+          
+        </div>
       </div>
 
       {/* Desktop */}
@@ -96,12 +103,14 @@ const Navbar = ({ hasPassedHero }) => {
             </Link>
           ))}
         </div>
-        <button
-          onClick={handleVendorClick}
-          className={`px-4 py-2 rounded-full font-sora border transition ${navBtnClass}`}
-        >
-          Become a Vendor
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleLoginClick}
+            className={`px-4 py-2 rounded-full font-sora border transition ${navBtnClass}`}
+          >
+            Login
+          </button>
+        </div>
       </div>
 
       {/* Slide-in Mobile Menu */}
