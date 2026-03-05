@@ -1,6 +1,7 @@
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import Item from "../models/Item.js";
+import Order from "../models/Order.js";
 
 // ─────────────────────────────────────────────────────────────────
 // 1. CREATE POST (vendor uploads photo/video → pending approval)
@@ -349,14 +350,15 @@ export const getDashboardStats = async (req, res) => {
     const myPosts = await Post.find({ userId });
     const approvedPosts = myPosts.filter((p) => p.status === "approved");
 
-    const myItems = await Item.countDocuments({ sellerId: userId, isActive: true });
+    const activeListingCount = await Item.countDocuments({ sellerId: userId, isActive: true, status: "published" });
+    const cropTypes = await Item.distinct("cropName", { sellerId: userId, isActive: true });
+
+    // Real revenue: sum of non-cancelled orders for this seller
+    const myOrders = await Order.find({ sellerId: userId, status: { $ne: "cancelled" } });
+    const totalSalesValue = myOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+    const pendingOrderCount = myOrders.filter((o) => o.status === "pending").length;
 
     const totalLikes = myPosts.reduce((sum, p) => sum + (p.likes?.length || 0), 0);
-
-    const cropTypes = [...new Set(myPosts.map((p) => p.cropName).filter(Boolean))];
-
-    const items = await Item.find({ sellerId: userId, isActive: true });
-    const totalSalesValue = items.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0);
 
     const currentYear = new Date().getFullYear();
     const monthlyData = Array.from({ length: 12 }, (_, i) => ({
@@ -383,13 +385,14 @@ export const getDashboardStats = async (req, res) => {
 
     res.status(200).json({
       totalSales: totalSalesValue,
-      activeCrops: cropTypes.length,
+      activeCrops: activeListingCount,
       cropNames: cropTypes.join(", ") || "None yet",
       totalPosts: myPosts.length,
       approvedPosts: approvedPosts.length,
       pendingPosts: myPosts.filter((p) => p.status === "pending").length,
+      pendingOrders: pendingOrderCount,
       totalLikes,
-      activeListings: myItems,
+      activeListings: activeListingCount,
       monthlyData,
       recentActivity,
     });

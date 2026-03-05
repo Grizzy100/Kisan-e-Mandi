@@ -25,3 +25,5 @@ dist-ssr
 .env*
 
 .vscode
+
+.PROBLEMS_AND_SOLUTIONS.md

@@ -1,30 +1,23 @@
 import React from 'react';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaSearch } from 'react-icons/fa';
 
 export const FilterSidebar = ({
   selectedCategories,
-  selectedTypes,
   onCategoryChange,
-  onTypeChange,
+  search,
+  onSearchChange,
+  minPrice,
+  maxPrice,
+  onPriceChange,
   onClearFilters,
   isOpen,
   onClose
 }) => {
   const categories = [
-    { id: 'seeds', label: 'Seeds' },
-    { id: 'fertilizers', label: 'Fertilizers' },
-    { id: 'manure', label: 'Manure' },
-    { id: 'fruits', label: 'Fruits' },
-    { id: 'vegetables', label: 'Vegetables' },
-    { id: 'irrigation', label: 'Irrigation Tools' },
-    { id: 'plants', label: 'Plants' }
-  ];
-
-  const types = [
-    { id: 'organic', label: 'Organic' },
-    { id: 'chemical', label: 'Chemical' },
-    { id: 'seasonal', label: 'Seasonal' },
-    { id: 'tools', label: 'Tools' }
+    { id: 'fruit', label: 'Fruits' },
+    { id: 'vegetable', label: 'Vegetables' },
+    { id: 'grain', label: 'Grains & Pulses' },
+    { id: 'other', label: 'Other / Misc' }
   ];
 
   return (
@@ -49,8 +42,24 @@ export const FilterSidebar = ({
           </button>
         </div>
 
+        {/* Search */}
         <div className="mb-8">
-          <h3 className="font-medium text-gray-900 mb-4 uppercase tracking-wide text-sm">Categories</h3>
+          <h3 className="font-medium text-gray-900 mb-3 uppercase tracking-wide text-sm">Search</h3>
+          <div className="relative">
+            <FaSearch size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => onSearchChange(e.target.value)}
+              placeholder="Crop, description…"
+              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            />
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="mb-8">
+          <h3 className="font-medium text-gray-900 mb-4 uppercase tracking-wide text-sm">Category</h3>
           <div className="space-y-3">
             {categories.map((category) => (
               <label key={category.id} className="flex items-center group cursor-pointer">
@@ -58,7 +67,7 @@ export const FilterSidebar = ({
                   type="checkbox"
                   checked={selectedCategories.includes(category.id)}
                   onChange={() => onCategoryChange(category.id)}
-                  className="w-4 h-4"
+                  className="w-4 h-4 accent-green-600"
                 />
                 <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">
                   {category.label}
@@ -68,22 +77,26 @@ export const FilterSidebar = ({
           </div>
         </div>
 
+        {/* Price Range */}
         <div className="mb-8">
-          <h3 className="font-medium text-gray-900 mb-4 uppercase tracking-wide text-sm">Type</h3>
-          <div className="space-y-3">
-            {types.map((type) => (
-              <label key={type.id} className="flex items-center group cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectedTypes.includes(type.id)}
-                  onChange={() => onTypeChange(type.id)}
-                  className="w-4 h-4"
-                />
-                <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">
-                  {type.label}
-                </span>
-              </label>
-            ))}
+          <h3 className="font-medium text-gray-900 mb-4 uppercase tracking-wide text-sm">Price Range (₹)</h3>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={minPrice}
+              min={0}
+              onChange={e => onPriceChange('min', e.target.value)}
+              className="w-1/2 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            />
+            <input
+              type="number"
+              placeholder="Max"
+              value={maxPrice}
+              min={0}
+              onChange={e => onPriceChange('max', e.target.value)}
+              className="w-1/2 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            />
           </div>
         </div>
 

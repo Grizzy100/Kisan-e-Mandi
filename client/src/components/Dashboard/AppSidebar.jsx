@@ -27,7 +27,7 @@ export function AppSidebar({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const isAdmin = user?.role === "admin";
+  const role = user?.role || "customer"; // "farmer", "customer", "admin"
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,19 +39,46 @@ export function AppSidebar({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const menuItems = [
-    { title: "Dashboard", key: "dashboard", icon: MdDashboard },
-    { title: "My Activity", key: "my", icon: MdPerson },
-    { title: "Items", key: "item", icon: MdShoppingCart, badge: "10" },
-    { title: "Help & Support", key: "help", icon: MdHelp },
-    { title: "Orders", key: "orders", icon: MdHistory },
-    { title: "Community", key: "community", icon: MdGroup },
-    ...(isAdmin ? [{ title: "Admin Approval", key: "admin", icon: MdAdminPanelSettings }] : []),
-  ];
+  const getMenuItems = () => {
+    const baseItems = [
+      { title: "Dashboard", key: "dashboard", icon: MdDashboard },
+    ];
+
+    if (role === "admin") {
+      baseItems.push(
+        { title: "Platform Users", key: "users", icon: MdGroup },
+        { title: "Crop Approvals", key: "admin", icon: MdAdminPanelSettings, badge: "!" }
+      );
+    }
+
+    if (role === "farmer") {
+      baseItems.push(
+        { title: "My Inventory", key: "my", icon: MdPerson },
+        { title: "Marketplace", key: "item", icon: MdShoppingCart },
+        { title: "Help & Support", key: "help", icon: MdHelp },
+        { title: "Orders", key: "orders", icon: MdHistory }
+      );
+    }
+
+    if (role === "customer") {
+      baseItems.push(
+        { title: "Marketplace", key: "item", icon: MdShoppingCart },
+        { title: "My Orders", key: "orders", icon: MdHistory }
+      );
+    }
+
+    // Community & Help only for farmers
+    if (role === "farmer") {
+      baseItems.push({ title: "Community", key: "community", icon: MdGroup });
+    }
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
 
   const settingsItems = [
     { title: "Settings", key: "settings", icon: MdSettings },
-    { title: "Billing", key: "billing", icon: MdCreditCard },
   ];
 
   const sidebarVariants = {
@@ -78,10 +105,11 @@ export function AppSidebar({
   };
 
   const handleLogout = () => {
+    const currentRole = user?.role;
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     toast.success("Logged out successfully 👋");
-    navigate("/login");
+    navigate(currentRole === "admin" ? "/admin/login" : "/login");
   };
 
   const renderButton = (item) => {

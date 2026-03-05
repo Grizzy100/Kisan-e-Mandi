@@ -2,10 +2,14 @@ import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema(
   {
-    // ── Linked post (auto-created from approved post) ──────────
+    // ── Linked post or ticket (auto-created) ───────────────────
     postId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
+    },
+    ticketId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SupportTicket",
     },
 
     // ── Seller ─────────────────────────────────────────────────
@@ -23,6 +27,7 @@ const itemSchema = new mongoose.Schema(
       enum: ["fruit", "vegetable", "grain", "other"],
       required: true,
     },
+    ticketCategory: { type: String, trim: true }, // original category from ticket e.g. "Rice", "Wheat"
     cropName: { type: String, required: true, trim: true },
     price: { type: Number, required: true },
     unit: {
@@ -45,7 +50,12 @@ const itemSchema = new mongoose.Schema(
     location: { type: String, trim: true },
 
     // ── Status ─────────────────────────────────────────────────
-    isActive: { type: Boolean, default: true },
+    status: {
+      type: String,
+      enum: ["pending_admin", "approved_hidden", "published", "shelved", "rejected"],
+      default: "pending_admin",
+    },
+    isActive: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

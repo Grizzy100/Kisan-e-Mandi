@@ -10,6 +10,7 @@ import {
     forgotPassword,
     resetPassword,
     resendVerification,
+    adminLogin,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -28,5 +29,8 @@ router.post("/resend-verification", resendVerification); // Resend email verify 
 
 // ── Protected routes ───────────────────────────────────────────
 router.get("/me", protect, getMe);
+
+// ── Admin-only route (strictly blocks non-admins) ───────────────
+router.post("/admin-login", adminLogin);
 
 export default router;

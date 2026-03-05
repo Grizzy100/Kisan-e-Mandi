@@ -4,8 +4,9 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
-import VendorDashboard from "./pages/VendorDasboard.jsx";
-import UserDashboard from "./pages/UserDashboard.jsx";
+import MainDashboard from "./pages/MainDashboard.jsx";
+import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import VerifyOTP from "./pages/VerifyOTP.jsx";
@@ -38,11 +39,7 @@ const VerifyEmail = () => {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
             toast.success("Email verified! You are now logged in.");
-            if (data.user.role === 'farmer' || data.user.role === 'admin') {
-              navigate("/vendor-portal");
-            } else {
-              navigate("/user-dashboard");
-            }
+            navigate("/dashboard");
           } else {
             toast.error(data.message || "Invalid or expired verification link");
             navigate("/login");
@@ -64,20 +61,31 @@ const VerifyEmail = () => {
 const PrivateRoute = ({ children, allowedRoles }) => {
   const userStr = localStorage.getItem("user");
   const token = localStorage.getItem("token");
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  console.log(`[PrivateRoute] Checking access to: ${location.pathname}. isAdminRoute: ${isAdminRoute}`, { userStr: !!userStr, token: !!token, allowedRoles });
 
   if (!userStr || !token) {
-    return <Navigate to="/login" />;
+    console.log(`[PrivateRoute] Missing auth. Redirecting to: ${isAdminRoute ? "/admin/login" : "/login"}`);
+    // Send admin-route visitors to the admin login page
+    return <Navigate to={isAdminRoute ? "/admin/login" : "/login"} replace />;
   }
 
   try {
     const user = JSON.parse(userStr);
+    console.log(`[PrivateRoute] User role: ${user.role}. Allowed:`, allowedRoles);
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-      return <Navigate to={user.role === 'farmer' || user.role === 'admin' ? '/vendor-portal' : '/user-dashboard'} />;
+      console.log(`[PrivateRoute] Access denied for role ${user.role}. Redirecting...`);
+      // Admin tried to access non-admin route → their dashboard
+      if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
+      return <Navigate to="/dashboard" replace />;
     }
   } catch (e) {
-    return <Navigate to="/login" />;
+    console.log(`[PrivateRoute] JSON Parse Error. Redirecting to ${isAdminRoute ? "/admin/login" : "/login"}`);
+    return <Navigate to={isAdminRoute ? "/admin/login" : "/login"} replace />;
   }
 
+  console.log(`[PrivateRoute] Access GRANTED to ${location.pathname}`);
   return children;
 };
 
@@ -86,7 +94,7 @@ const LayoutWithNavbar = ({ children }) => {
   const location = useLocation();
 
   // Only show navbar on `/`
-  const showNavbar = location.pathname === "/";
+  const showNavbar = location.pathname === "/" && !location.pathname.startsWith("/admin");
 
   return (
     <>
@@ -132,21 +140,23 @@ const App = () => {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/verify-otp" element={<VerifyOTP />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
 
               <Route
-                path="/vendor-portal"
+                path="/dashboard"
                 element={
-                  <PrivateRoute allowedRoles={['farmer', 'admin']}>
-                    <VendorDashboard />
+                  <PrivateRoute allowedRoles={['farmer', 'admin', 'customer']}>
+                    <MainDashboard />
                   </PrivateRoute>
                 }
               />
 
+              {/* Dedicated Admin Dashboard */}
               <Route
-                path="/user-dashboard"
+                path="/admin/dashboard"
                 element={
-                  <PrivateRoute allowedRoles={['customer']}>
-                    <UserDashboard />
+                  <PrivateRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
                   </PrivateRoute>
                 }
               />

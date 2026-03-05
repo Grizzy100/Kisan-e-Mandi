@@ -4,13 +4,23 @@ import DashboardHeader from "../components/Dashboard/DashboardHeader";
 import HelpAndSupport from "../components/Dashboard/HelpandSupport";
 import Community from "../components/Dashboard/Community";
 import Item from "../components/Dashboard/Item/Item";
+import FarmerMarketplace from "../components/Dashboard/FarmerMarketplace";
 import { DashboardContent } from "../components/Dashboard/DashBoardContent";
 import AdminApproval from "../components/Dashboard/AdminApproval";
 import MySection from "../components/Dashboard/MySection";
+import CustomerOverview from "../components/Dashboard/CustomerOverview";
+import AdminOverview from "../components/Dashboard/AdminOverview";
+import CustomerOrders from "../components/Dashboard/CustomerOrders";
+import VendorOrders from "../components/Dashboard/VendorOrders";
 import Lenis from "@studio-freight/lenis";
 import { AnimatePresence, motion } from "framer-motion";
 
-const VendorDashboard = () => {
+const MainDashboard = () => {
+  // Extract user info to determine default overview panel
+  const userString = localStorage.getItem("user");
+  const user = userString ? JSON.parse(userString) : {};
+  const role = user.role || "customer";
+
   const [currentSection, setCurrentSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
@@ -56,13 +66,17 @@ const VendorDashboard = () => {
       case "community":
         return <Community />;
       case "item":
-        return <Item />;
+        return role === "farmer" ? <FarmerMarketplace /> : <Item />;
       case "admin":
         return <AdminApproval />;
       case "my":
         return <MySection />;
+      case "orders":
+        return role === "farmer" ? <VendorOrders /> : <CustomerOrders />;
       case "dashboard":
       default:
+        if (role === "admin") return <AdminOverview />;
+        if (role === "customer") return <CustomerOverview />;
         return <DashboardContent />;
     }
   };
@@ -138,4 +152,4 @@ const VendorDashboard = () => {
   );
 };
 
-export default VendorDashboard;
+export default MainDashboard;

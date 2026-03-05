@@ -28,9 +28,12 @@ axiosInstance.interceptors.response.use(
       // Token has expired or is invalid — clear storage and redirect to login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      // Avoid redirect loops if we're already on the login page
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
+
+      // Avoid redirect loops if we're already on a login page
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes("/login")) {
+        // If we were on an admin route, send to admin login, otherwise normal login
+        window.location.href = currentPath.startsWith("/admin") ? "/admin/login" : "/login";
       }
     }
     return Promise.reject(error);

@@ -36,7 +36,7 @@ const sendEmail = async ({ to, subject, html }) => {
 // ── Validation Helpers ────────────────────────────────────────
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const isValidPhone = (v) => /^\+[1-9]\d{7,14}$/.test(v);
-const isValidName  = (v) => typeof v === "string" && v.trim().length >= 2;
+const isValidName = (v) => typeof v === "string" && v.trim().length >= 2;
 
 // ─────────────────────────────────────────────────────────────────
 // 0. CHECK AVAILABILITY (email or phone — real-time)
@@ -477,3 +477,45 @@ export const resendVerification = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────
+// 11. ADMIN LOGIN — strictly admin-only, separate endpoint
+//     POST /api/auth/admin-login
+// ─────────────────────────────────────────────────────────────────
+export const adminLogin = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  try {
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password");
+
+    if (!user || !user.password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // ── Strict role guard: only admins may use this endpoint ──
+    if (user.role !== "admin") {
+      return res.status(403).json({
+        message: "Access denied. This portal is for administrators only.",
+      });
+    }
+
+    const match = await user.matchPassword(password);
+    if (!match) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const jwtToken = generateJWT(user._id, user.role);
+
+    res.status(200).json({
+      message: "Admin logged in successfully",
+      token: jwtToken,
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error("Admin login error:", error);
+    res.status(500).json({ message: "Server error during admin login" });
+  }
+};

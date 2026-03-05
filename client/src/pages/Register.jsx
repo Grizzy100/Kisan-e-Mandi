@@ -17,11 +17,8 @@ import Klogo from "../assets/KisanLogo.png";
 import axiosInstance from "../api/axios";
 
 const redirectByRole = (user, navigate) => {
-    if (user.role === "farmer" || user.role === "admin") {
-        navigate("/vendor-portal");
-    } else {
-        navigate("/user-dashboard");
-    }
+    if (user.role === "admin") navigate("/admin/dashboard");
+    else navigate("/dashboard");
 };
 
 const Register = () => {
@@ -108,8 +105,12 @@ const Register = () => {
         });
         setLoading(false);
 
-        if (ok) toast.success(data.message || "Check your email to verify your account!");
-        else toast.error(data.message || "Registration failed");
+        if (ok) {
+            toast.success(data.message || "Registered! Please check your email to verify your account.");
+            navigate("/login");
+        } else {
+            toast.error(data.message || "Registration failed");
+        }
     };
 
     /* PHONE OTP — Firebase */
@@ -254,7 +255,7 @@ const Register = () => {
                         </button>
                     </div>
 
-                    {/* Animated Email / Phone Tabs */}
+                    {/* Animated Email / Phone Tabs
                     <div className="mb-6">
                         <div className="relative flex bg-gray-100 rounded-lg p-1 overflow-hidden">
                             <div
@@ -284,7 +285,7 @@ const Register = () => {
                                 Phone OTP
                             </button>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Animated Forms Container */}
                     <div className="relative">

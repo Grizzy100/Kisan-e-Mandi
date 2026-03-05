@@ -16,10 +16,10 @@ import Klogo from "../assets/KisanLogo.png";
 import axiosInstance from "../api/axios";
 
 const redirectByRole = (user, navigate) => {
-  if (user.role === "farmer" || user.role === "admin") {
-    navigate("/vendor-portal");
+  if (user.role === "admin") {
+    navigate("/admin/dashboard");
   } else {
-    navigate("/user-dashboard");
+    navigate("/dashboard");
   }
 };
 
@@ -40,6 +40,8 @@ const Login = () => {
   // Validation state
   const [phoneErr, setPhoneErr] = useState("");
   const [emailErr, setEmailErr] = useState("");
+  const [verifyError, setVerifyError] = useState(false); // 403 — email not verified
+  const [resendLoading, setResendLoading] = useState(false);
 
   const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "" : "Enter a valid email address";
   const validateOtp = (v) => /^\d{6}$/.test(v) ? "" : "OTP must be exactly 6 digits";
@@ -80,6 +82,7 @@ const Login = () => {
       return;
     }
 
+    setVerifyError(false);
     setLoading(true);
     const { ok, data } = await post("login", { email, password });
     setLoading(false);
@@ -89,8 +92,24 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Logged in!");
       redirectByRole(data.user, navigate);
+    } else if (!ok && data?.message?.toLowerCase().includes("verify your email")) {
+      setVerifyError(true);
     } else {
       toast.error(data.message || "Login failed");
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) { toast.error("Enter your email address first."); return; }
+    setResendLoading(true);
+    try {
+      const res = await axiosInstance.post("/auth/resend-verification", { email });
+      toast.success(res.data?.message || "Verification email sent! Check your inbox.");
+      setVerifyError(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to resend. Try again.");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -221,7 +240,7 @@ const Login = () => {
           </p>
 
           {/* Animated Email / Phone Tabs */}
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <div className="relative flex bg-gray-100 rounded-xl p-1 overflow-hidden">
               <div
                 className={`absolute top-1 bottom-1 w-1/2 bg-white shadow rounded-xl transition-all duration-300 ease-in-out ${authMethod === "phone" ? "translate-x-full" : ""
@@ -250,7 +269,7 @@ const Login = () => {
                 Phone OTP
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Animated Forms Container */}
           <div className="relative">
@@ -304,6 +323,21 @@ const Login = () => {
                     Forgot password?
                   </Link>
                 </div>
+
+                {verifyError && (
+                  <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-sm text-amber-800 space-y-2">
+                    <p className="font-semibold">📧 Email not verified</p>
+                    <p className="text-xs">Please verify your email before logging in. Check your inbox or resend the link below.</p>
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resendLoading}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold py-2 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {resendLoading ? "Sending..." : "Resend Verification Email"}
+                    </button>
+                  </div>
+                )}
 
                 <button
                   type="submit"

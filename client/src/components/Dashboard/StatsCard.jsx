@@ -18,8 +18,8 @@ export function StatsCard({ stats, loading }) {
         },
         {
           title: "Active Crops",
-          value: String(stats.activeCrops || 0),
-          description: stats.activeCrops > 0 ? "Currently listed" : "No active crops",
+          value: String(stats.activeListings || stats.activeCrops || 0),
+          description: (stats.activeListings || stats.activeCrops) > 0 ? "Live in marketplace" : "No active crops",
           icon: MdGrass, color: "text-blue-600", bgColor: "bg-blue-100",
         },
         {

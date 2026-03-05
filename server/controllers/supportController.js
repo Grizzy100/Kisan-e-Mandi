@@ -1,4 +1,5 @@
 import SupportTicket from "../models/SupportTicket.js";
+import Item from "../models/Item.js";
 import nodemailer from "nodemailer";
 
 // ── Helper: Nodemailer transporter ──────────────────────────────
@@ -37,6 +38,31 @@ export const createSupportTicket = async (req, res) => {
       price: Number(price),
       mediaUrl: mediaUrl || "",
       mediaType: mediaType || "image",
+    });
+
+    // Map Category to CropType for Item schema
+    const mapCategoryToCropType = (cat) => {
+      const c = cat.toLowerCase();
+      if (c === "wheat" || c === "rice") return "grain";
+      if (c === "vegetables") return "vegetable";
+      if (c === "fruits") return "fruit";
+      return "other";
+    };
+
+    // Auto-generate a pending_admin Item from ticket fields
+    await Item.create({
+      ticketId: ticket._id,
+      sellerId: userId,
+      name: subject,
+      description,
+      cropType: mapCategoryToCropType(category),
+      ticketCategory: category,   // preserve original label e.g. "Rice"
+      cropName: subject,
+      price: Number(price),
+      mediaUrl: mediaUrl || "",
+      mediaType: mediaType || "image",
+      status: "pending_admin",
+      isActive: false,
     });
 
     // Send confirmation email
@@ -96,5 +122,85 @@ export const getUserTickets = async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching tickets:", err);
     return res.status(500).json({ message: "Server error." });
+  }
+};
+
+// ── PATCH /api/support/:id/status (Admin) ───────────────────────
+export const updateTicketStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // e.g. "resolved" (for approve), "rejected"
+
+    const ticket = await SupportTicket.findById(id).populate("userId");
+    if (!ticket) return res.status(404).json({ message: "Ticket not found." });
+
+    ticket.status = status;
+    await ticket.save();
+
+    // Find the drafted item and update its status too.
+    console.log(`🔍 [updateTicketStatus] Looking for item with ticketId: ${id}`);
+    const item = await Item.findOne({ ticketId: id });
+    console.log(`🔍 [updateTicketStatus] Item found:`, item ? `${item._id} (status: ${item.status})` : "NOT FOUND");
+    let itemStatusField = "pending_admin";
+
+    if (item) {
+      if (status === "resolved") {
+        // Admin approved — move to approved_hidden; farmer must Accept to publish
+        itemStatusField = "approved_hidden";
+        item.status = "approved_hidden";
+        item.isActive = false;
+        console.log(`✅ [updateTicketStatus] Setting item ${item._id} to approved_hidden (awaiting farmer Accept)`);
+      } else if (status === "rejected") {
+        itemStatusField = "rejected";
+        item.status = "rejected";
+        item.isActive = false;
+        console.log(`❌ [updateTicketStatus] Setting item ${item._id} to rejected`);
+      }
+      const saved = await item.save();
+      console.log(`💾 [updateTicketStatus] Item saved:`, saved.status, saved.isActive);
+    } else {
+      console.warn(`⚠️ [updateTicketStatus] No item found with ticketId ${id} — item won't be updated!`);
+    }
+
+    // Try sending email notification to the user
+    try {
+      if (ticket.email) {
+        const transporter = createTransporter();
+        const statLabel = status === "resolved" ? "Approved" : "Rejected";
+
+        await transporter.sendMail({
+          from: `"Kisan e-Mandi Admin" <${process.env.EMAIL_USER}>`,
+          to: ticket.email,
+          subject: `Crop Enlistment Update: ${statLabel}`,
+          html: `
+            <div style="font-family:sans-serif;padding:20px;">
+              <h2>Your request has been ${statLabel}</h2>
+              <p>Your ticket for <strong>${ticket.subject}</strong> has been updated to <strong>${status}</strong> by our admins.</p>
+              ${status === "resolved" ? '<p>Your crop listing has been <strong>approved</strong> and is now live on the marketplace.</p>' : '<p>Sorry, your request was denied at this time.</p>'}
+            </div>
+          `,
+        });
+      }
+    } catch (mailErr) {
+      console.error("Failed sending admin status email:", mailErr);
+    }
+
+    return res.json({ message: `Ticket ${status} successfully`, ticket, itemStatus: itemStatusField });
+  } catch (err) {
+    console.error("❌ Error updating ticket status:", err);
+    return res.status(500).json({ message: "Server error." });
+  }
+};
+
+// ── GET /api/support/all  (admin only) ───────────────────────────
+export const getAllTickets = async (req, res) => {
+  try {
+    const tickets = await SupportTicket.find()
+      .sort({ createdAt: -1 })
+      .populate("userId", "name email");
+    res.status(200).json(tickets);
+  } catch (err) {
+    console.error("getAllTickets error:", err);
+    res.status(500).json({ message: "Server error." });
   }
 };

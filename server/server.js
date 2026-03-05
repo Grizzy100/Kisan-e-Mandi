@@ -12,6 +12,7 @@ import userRoutes from "./routes/userRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 
 // Connect to MongoDB
 connectDB();
@@ -33,12 +34,13 @@ app.get("/", (req, res) => res.send("API is working"));
 // });
 
 // API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/auth",    authRoutes);
+app.use("/api/posts",   postRoutes);
+app.use("/api/users",   userRoutes);
 app.use("/api/support", supportRoutes);
-app.use("/api/items", itemRoutes);
-app.use("/api/upload", uploadRoutes);
+app.use("/api/items",   itemRoutes);
+app.use("/api/upload",  uploadRoutes);
+app.use("/api/orders",  orderRoutes);
 
 // Central Error Handling
 app.use(errorHandler);

@@ -17,11 +17,8 @@ const RESEND_COOLDOWN = 45;
 const MAX_RESENDS = 3;
 
 const redirectByRole = (user, navigate) => {
-    if (user.role === "farmer" || user.role === "admin") {
-        navigate("/vendor-portal");
-    } else {
-        navigate("/user-dashboard");
-    }
+    if (user.role === "admin") navigate("/admin/dashboard");
+    else navigate("/dashboard");
 };
 
 const maskPhone = (phone) => {

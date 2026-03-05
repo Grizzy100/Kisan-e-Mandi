@@ -82,6 +82,12 @@ const userSchema = new mongoose.Schema(
       enum: ["farmer", "customer", "admin"],
       default: "customer",
     },
+
+    // ── Admin controls ─────────────────────────────────────────
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
