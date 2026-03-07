@@ -135,7 +135,7 @@ Customers can:
 
 ## 🧑‍💼 Admin Dashboard
 
-![Admin Panel](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20\(2523\).png?raw=true)
+![Admin Panel]([https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20\(2523\).png?raw=true](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Admin%20Dashbaord.png))
 
 Admin capabilities include:
 
