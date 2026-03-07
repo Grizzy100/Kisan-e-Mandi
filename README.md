@@ -228,33 +228,6 @@ Dashboard loaded
 
 ---
 
-## 📁 Repository Structure
-
-```
-Kisan-e-Mandi/
-├── client/                      # React + Vite frontend
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Landing/         # Public landing page
-│   │   │   ├── Farmer/          # Dashboard, inventory, tickets
-│   │   │   ├── Customer/        # Marketplace, cart, purchases
-│   │   │   └── Admin/           # Ticket queue, user management
-│   │   ├── components/          # Shared UI components
-│   │   └── lib/                 # API client, auth helpers
-│
-└── server/                      # Node.js + Express backend
-    ├── routes/
-    │   ├── auth.routes.js        # Google OAuth
-    │   ├── ticket.routes.js      # Listing ticket workflow
-    │   ├── listing.routes.js     # Marketplace products
-    │   ├── admin.routes.js       # Admin moderation
-    │   └── community.routes.js  # Farmer community posts
-    ├── models/                   # Mongoose schemas
-    └── middleware/               # Auth, upload (Multer)
-```
-
----
-
 ## 🚀 Running the Project
 
 ### Prerequisites
