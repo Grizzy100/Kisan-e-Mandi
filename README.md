@@ -36,7 +36,7 @@ India's agricultural supply chain has a structural flaw — the value created by
 
 ## 📸 Platform Showcase
 
-<details>
+<details open>
 <summary><b>🌿 Landing Page</b></summary>
 <br/>
 
@@ -52,7 +52,7 @@ India's agricultural supply chain has a structural flaw — the value created by
 
 </details>
 
-<details>
+<details open>
 <summary><b>🛒 Customer Marketplace</b></summary>
 <br/>
 
@@ -60,7 +60,7 @@ India's agricultural supply chain has a structural flaw — the value created by
 
 </details>
 
-<details>
+<details open>
 <summary><b>🧑‍💼 Admin Dashboard</b></summary>
 <br/>
 
@@ -68,7 +68,7 @@ India's agricultural supply chain has a structural flaw — the value created by
 
 </details>
 
-<details>
+<details open>
 <summary><b>📦 Vendor Marketplace</b></summary>
 <br/>
 
