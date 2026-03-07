@@ -1,291 +1,341 @@
-# 🌾 Kisan-e-Mandi
+<div align="center">
 
-> **Empowering Farmers. Removing Middlemen. Building Transparent Agricultural Markets.**
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=40&pause=1000&color=16A34A&center=true&vCenter=true&width=700&lines=Kisan-e-Mandi+%F0%9F%8C%BE;Empowering+Farmers.;Removing+Middlemen.;Building+Transparent+Markets." alt="Kisan-e-Mandi" />
 
-**Kisan-e-Mandi** is a farmer-centric digital marketplace designed to eliminate the traditional middleman system in agriculture.
-The platform allows farmers to sell crops directly to customers while ensuring trust through an **admin-verified listing workflow**.
+<br/>
 
-The platform also provides a **community space for farmers** to connect, share knowledge, and support each other.
+**A farmer-centric digital marketplace that removes the middleman, ensures listing quality through admin verification, and builds a community where farmers connect and thrive.**
 
----
+<br/>
 
-# 🚜 The Problem
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)](https://cloudinary.com)
+[![Google OAuth](https://img.shields.io/badge/Google_OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://developers.google.com/identity)
 
-Traditional agricultural supply chains suffer from several issues:
-
-⚠️ Farmers depend heavily on **middlemen**
-⚠️ Farmers often receive **unfair pricing**
-⚠️ Limited access to **direct buyers**
-⚠️ Lack of **digital literacy among farmers**
-
----
-
-# 🌱 Our Solution
-
-**Kisan-e-Mandi introduces a verified marketplace model.**
-
-Instead of allowing unrestricted product uploads, the platform ensures **quality and trust through a ticket-based listing system**.
-
-✔ Farmers request product listing
-✔ Admin verifies authenticity
-✔ Product becomes eligible for marketplace
-✔ Farmers decide when to go live
-
-This ensures **transparency and quality control**.
+</div>
 
 ---
 
-# 🔄 Platform Workflow
+## 🎯 The Problem
 
-```
-👨‍🌾 Farmer
-   │
-   ├─ Raises Ticket / Calls Support
-   │
-   ▼
-🧑‍💼 Admin Verification
-   │
-   ├─ Ticket Moderated
-   ├─ Crop Details Verified
-   │
-   ▼
-✅ Listing Approved
-   │
-   ▼
-👨‍🌾 Farmer Dashboard
-   │
-   ├─ Accept Listing (Go Live)
-   └─ Later (Shelf Product)
-   │
-   ▼
-🛒 Marketplace
-   │
-   ▼
-👤 Customers Buy Directly from Farmers
-```
+India's agricultural supply chain has a structural flaw — the value created by farmers is captured by intermediaries, not the people who grew the food.
+
+| The Old Way | With Kisan-e-Mandi |
+|---|---|
+| Farmers sell through middlemen at suppressed prices | Farmers sell **directly to customers** |
+| Buyers have no visibility into crop origin or quality | Every listing is **admin-verified** before going live |
+| No community or knowledge-sharing layer | Farmers have a **community space** to connect and share |
+| Digital tools built for tech-literate users | Simple, guided workflows designed for **all literacy levels** |
 
 ---
 
-# 👥 Platform Roles
+## 📸 Platform Showcase
 
-## 👨‍🌾 Farmer
+<details>
+<summary><b>🌿 Landing Page</b></summary>
+<br/>
 
-* Raise listing tickets
-* Upload crop/product details
-* Manage inventory
-* Accept or delay product listings
-* Participate in community discussions
+![Landing Page](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Landing%20Page.png?raw=true)
 
----
+</details>
 
-## 👤 Customer
+<details open>
+<summary><b>👨‍🌾 Farmer Dashboard</b></summary>
+<br/>
 
-* Browse marketplace
-* View fresh farm products
-* Add products to cart
-* Purchase directly from farmers
+![Farmer Dashboard](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Vendor%20Home%20page.png?raw=true)
 
----
+</details>
 
-## 🧑‍💼 Admin
+<details>
+<summary><b>🛒 Customer Marketplace</b></summary>
+<br/>
 
-* Verify farmer tickets
-* Approve crop listings
-* Manage vendors
-* Manage customers
-* Handle complaints & support tickets
+![Customer Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Customer%20Home%20page.png?raw=true)
 
----
+</details>
 
-# 📸 Platform Screenshots
-
-## 🌿 Landing Page
-
-![Landing Page](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Landing%20Page.png)
-
-The landing page introduces the mission of the platform —
-**empowering farmers while removing intermediaries from the agricultural supply chain.**
-
----
-
-## 👨‍🌾 Farmer Dashboard
-
-![Farmer Dashboard](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Vendor%20Home%20page.png)
-
-Farmers can:
-
-* Track crop listings
-* Monitor total sales
-* Manage inventory
-* View approval status
-
----
-
-## 🛒 Customer Marketplace
-
-![Customer Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Customer%20Home%20page.png)
-
-Customers can:
-
-* Browse fresh crops
-* Discover deals of the day
-* Purchase directly from farmers
-
----
-
-## 🧑‍💼 Admin Dashboard
+<details>
+<summary><b>🧑‍💼 Admin Dashboard</b></summary>
+<br/>
 
 ![Admin Panel](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Admin%20Dashbaord.png?raw=true)
 
-Admin capabilities include:
+</details>
 
-* Platform analytics
-* Vendor management
-* Customer management
-* Ticket moderation
+<details>
+<summary><b>📦 Vendor Marketplace</b></summary>
+<br/>
 
----
+![Vendor Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Vendor%20Market%20Place.png?raw=true)
 
-## 📦 Vendor Marketplace
-
-![Vendor Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Vendor%20Market%20Place.png)
-
-Farmers can:
-
-* Accept approved listings
-* Delay product publishing
-* Manage live marketplace products
+</details>
 
 ---
 
-# 💻 Tech Stack
+## ⭐ Core Features
 
-## 🖥️ Frontend
+### 🎫 Ticket-Based Listing Verification
 
-⚛️ React.js
-⚡ Vite
-🎨 TailwindCSS
-🎞 Framer Motion
-🔗 React Router
-🔔 React Toastify
-
----
-
-## 🔧 Backend
-
-🟢 Node.js
-🚀 Express.js
-🍃 MongoDB (Mongoose)
-🖼 Cloudinary (Image Storage)
-📦 Multer (File Uploads)
-📧 Nodemailer (Admin notifications)
-
----
-
-# 🔐 Authentication
-
-The platform uses **Google OAuth authentication** for secure login and signup.
-
-### Login Flow
+Instead of allowing any farmer to post any product instantly, Kisan-e-Mandi enforces a **verified listing workflow**. Every product goes through human review before it can reach customers.
 
 ```
-User → Google Sign In
+👨‍🌾 Farmer raises listing ticket
+          │
+          ▼
+   [TICKET: PENDING]
+          │
+          ▼
+🧑‍💼 Admin reviews crop details
+          │
+     ┌────┴────┐
+     │         │
+  Approved   Rejected ──► Farmer notified (Nodemailer)
+     │
+     ▼
+[LISTING: VERIFIED]
+          │
+          ▼
+👨‍🌾 Farmer decides when to go live
+          │
+     ┌────┴──────────┐
+     │               │
+  Accept Now     Shelf (Later)
+     │
+     ▼
+🛒 Product live on marketplace
+```
+
+This ensures **no unverified or fraudulent listings** reach buyers, while giving farmers full control over their own publish timing.
+
+---
+
+### 📉 Direct Farmer-to-Customer Sales
+
+Every purchase on the marketplace goes **directly from the verified farmer to the customer** — no intermediary takes a cut. Buyers know exactly which farmer grew what they're buying.
+
+---
+
+### 🧑‍💼 Admin Control Centre
+
+The admin panel provides full platform governance:
+
+| Capability | Description |
+|---|---|
+| 🎫 Ticket moderation | Review and approve/reject farmer listing requests |
+| 👨‍🌾 Vendor management | Manage farmer accounts & verification status |
+| 👤 Customer management | Handle customer accounts & complaints |
+| 📊 Platform analytics | Track listings, sales, and activity dashboards |
+| 📧 Email notifications | Automated Nodemailer emails on ticket decisions |
+
+---
+
+### 👥 Platform Roles
+
+| Role | Capabilities |
+|---|---|
+| **🌾 Farmer** | Raise listing tickets · Upload crop details · Manage inventory · Accept or delay going live · Join community discussions |
+| **🛒 Customer** | Browse the marketplace · Discover deals · Add to cart · Buy directly from verified farmers |
+| **🧑‍💼 Admin** | Verify tickets · Approve listings · Manage all users · Handle support |
+
+---
+
+### 🔐 Google OAuth Authentication
+
+No passwords to store, no friction for farmers unfamiliar with traditional signup flows.
+
+```
+User clicks Sign In
         │
         ▼
-OAuth Authentication
+Google OAuth consent
         │
         ▼
-Google returns user identity
+Google returns verified identity
         │
         ▼
-User session created in application
+Role assigned (Farmer / Customer)
+        │
+        ▼
+Dashboard loaded
 ```
 
-Benefits:
-
-✔ Secure login
-✔ No password storage
-✔ Faster onboarding for farmers and customers
+**Benefits:** Secure by default · No credential storage · Faster onboarding for users with limited digital literacy.
 
 ---
 
-# 🚀 Getting Started
-
-## 1️⃣ Clone Repository
+## 🏗️ Architecture
 
 ```
-git clone https://github.com/your-username/kisan-e-mandi.git
-cd kisan-e-mandi
+┌──────────────────────────────────────────────────────┐
+│                  React + Vite Client                  │
+│         (Tailwind CSS · Framer Motion · React Router) │
+└──────────────────────┬───────────────────────────────┘
+                       │  REST API
+                       ▼
+┌──────────────────────────────────────────────────────┐
+│              Node.js + Express Backend                │
+│                                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
+│  │ Auth Routes  │  │ Listing/     │  │ Community  │  │
+│  │ Google OAuth │  │ Ticket       │  │ Posts      │  │
+│  └──────────────┘  │ Routes       │  └────────────┘  │
+│                    └──────────────┘                  │
+│  ┌──────────────┐  ┌──────────────┐                  │
+│  │ Admin Routes │  │ Nodemailer   │                  │
+│  │ (moderation) │  │ (email notif)│                  │
+│  └──────────────┘  └──────────────┘                  │
+└──────────────────────┬───────────────────────────────┘
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+   ┌──────▼──────┐         ┌────────▼──────┐
+   │   MongoDB   │         │  Cloudinary   │
+   │  (Mongoose) │         │ (crop images) │
+   └─────────────┘         └───────────────┘
 ```
 
 ---
 
-## 2️⃣ Install Dependencies
+## 🛠️ Tech Stack
 
 ### Frontend
 
-```
-cd client
-npm install
-```
+| Technology | Purpose |
+|---|---|
+| React | UI component framework |
+| Vite | Lightning-fast dev server & bundler |
+| Tailwind CSS | Utility-first styling |
+| Framer Motion | Smooth animations & transitions |
+| React Router | Client-side routing |
+| React Toastify | User notification toasts |
 
 ### Backend
 
+| Technology | Purpose |
+|---|---|
+| Node.js + Express | REST API server |
+| MongoDB + Mongoose | Document database & ODM |
+| Cloudinary | Crop image storage & delivery |
+| Multer | Multipart file upload handling |
+| Nodemailer | Admin notification emails on ticket decisions |
+| Google OAuth | Secure authentication (no password storage) |
+
+---
+
+## 📁 Repository Structure
+
 ```
-cd server
-npm install
+Kisan-e-Mandi/
+├── client/                      # React + Vite frontend
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Landing/         # Public landing page
+│   │   │   ├── Farmer/          # Dashboard, inventory, tickets
+│   │   │   ├── Customer/        # Marketplace, cart, purchases
+│   │   │   └── Admin/           # Ticket queue, user management
+│   │   ├── components/          # Shared UI components
+│   │   └── lib/                 # API client, auth helpers
+│
+└── server/                      # Node.js + Express backend
+    ├── routes/
+    │   ├── auth.routes.js        # Google OAuth
+    │   ├── ticket.routes.js      # Listing ticket workflow
+    │   ├── listing.routes.js     # Marketplace products
+    │   ├── admin.routes.js       # Admin moderation
+    │   └── community.routes.js  # Farmer community posts
+    ├── models/                   # Mongoose schemas
+    └── middleware/               # Auth, upload (Multer)
 ```
 
 ---
 
-## 4️⃣ Run Development Server
+## 🚀 Running the Project
 
-Backend
+### Prerequisites
 
+- Node.js LTS
+- MongoDB (local or Atlas connection string)
+- Cloudinary account
+- Google OAuth credentials
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Grizzy100/Kisan-e-Mandi.git
+cd Kisan-e-Mandi
 ```
+
+### 2. Configure environment variables
+
+```bash
+# server/.env
+MONGODB_URI=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=
+NODEMAILER_USER=
+NODEMAILER_PASS=
+SESSION_SECRET=
+CLIENT_URL=http://localhost:5173
+```
+
+### 3. Install & run the backend
+
+```bash
+cd server
+npm install
 npm run server
 ```
 
-Frontend
+### 4. Install & run the frontend
 
-```
+```bash
+cd client
+npm install
 npm run dev
 ```
 
----
-
-# 🛣 Future Roadmap
-
-🌾 AI crop price prediction
-📦 Logistics integration
-💳 Secure payment gateway
-📱 Mobile application
-🌍 Multi-language support
-📊 Farmer analytics dashboard
+Open [http://localhost:5173](http://localhost:5173).
 
 ---
 
-# 🤝 Contributing
+## 🔮 Roadmap
 
-Contributions are welcome.
-
-Steps:
-
-```
-Fork the repository
-Create a feature branch
-Commit changes
-Open a pull request
-```
+| Area | Planned Improvement |
+|---|---|
+| 💳 **Payment Gateway** | Secure in-platform payments between farmers and customers |
+| 🤖 **AI Price Prediction** | ML-based crop price forecasting from market trends |
+| 📦 **Logistics Integration** | Built-in delivery coordination |
+| 📱 **Mobile App** | React Native app for low-connectivity rural environments |
+| 🌍 **Multi-Language Support** | Hindi, regional languages for farmer accessibility |
+| 📊 **Farmer Analytics** | Revenue trends, best-performing crops, buyer insights |
 
 ---
 
-# 📜 License
+## 🧠 Engineering Takeaway
 
-MIT License
+> Kisan-e-Mandi taught me that the most impactful systems aren't necessarily the most technically complex.
+>
+> The challenge here wasn't distributed systems or event sourcing — it was **understanding the real user**, designing workflows for people unfamiliar with technology, and building trust mechanisms (admin verification) that make a marketplace actually usable.
+>
+> Sometimes the hardest engineering problem is not technical at all.
+> It's figuring out **what to build** and **why it matters**.
 
 ---
 
-# ❤️ Vision
+<div align="center">
 
-> A world where farmers receive fair prices and agricultural trade becomes transparent, efficient, and accessible through technology.
+🌾 Built to give farmers a fair shot at the market they feed.
+
+⭐ If this resonates with you, consider starring the repo!
+
+</div>
