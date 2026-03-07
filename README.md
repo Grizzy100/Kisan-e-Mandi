@@ -101,7 +101,7 @@ This ensures **transparency and quality control**.
 
 ## 🌿 Landing Page
 
-![Landing Page](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20\(2524\).png?raw=true)
+![Landing Page](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Landing%20Page.png)
 
 The landing page introduces the mission of the platform —
 **empowering farmers while removing intermediaries from the agricultural supply chain.**
@@ -110,7 +110,7 @@ The landing page introduces the mission of the platform —
 
 ## 👨‍🌾 Farmer Dashboard
 
-![Farmer Dashboard](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20\(2519\).png?raw=true)
+![Farmer Dashboard](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Vendor%20Home%20page.png)
 
 Farmers can:
 
@@ -123,7 +123,7 @@ Farmers can:
 
 ## 🛒 Customer Marketplace
 
-![Customer Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20\(2520\).png?raw=true)
+![Customer Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Customer%20Home%20page.png)
 
 Customers can:
 
@@ -135,7 +135,7 @@ Customers can:
 
 ## 🧑‍💼 Admin Dashboard
 
-![Admin Panel]([https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20\(2523\).png?raw=true](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Admin%20Dashbaord.png))
+![Admin Panel](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Admin%20Dashbaord.png?raw=true)
 
 Admin capabilities include:
 
@@ -148,7 +148,7 @@ Admin capabilities include:
 
 ## 📦 Vendor Marketplace
 
-![Vendor Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/main/Screenshot%20\(2521\).png?raw=true)
+![Vendor Marketplace](https://github.com/Grizzy100/Kisan-e-Mandi/blob/c9628d863a73746ac08515d662b33c3af3c7f43b/Vendor%20Market%20Place.png)
 
 Farmers can:
 
