@@ -9,7 +9,7 @@ import HelpAndSupport from "../components/Dashboard/HelpAndSupport";
 import Community from "../components/Dashboard/Community";
 import Item from "../components/Dashboard/Item/Item";
 import FarmerMarketplace from "../components/Dashboard/FarmerMarketplace";
-import { DashboardContent } from "../components/Dashboard/DashBoardContent";
+import { DashboardContent } from "../components/Dashboard/DashboardContent";
 import AdminApproval from "../components/Dashboard/AdminApproval";
 import MySection from "../components/Dashboard/MySection";
 import CustomerOverview from "../components/Dashboard/CustomerOverview";
