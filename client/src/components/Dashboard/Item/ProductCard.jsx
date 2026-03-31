@@ -1,183 +1,90 @@
 import React from 'react';
-import { FaShoppingCart, FaMapMarkerAlt, FaBoxOpen, FaTrash } from 'react-icons/fa';
-import { FcAcceptDatabase } from 'react-icons/fc';
-import { MdOutlineWatchLater } from 'react-icons/md';
+import { motion } from 'framer-motion';
+import { MdShoppingBasket, MdVerified, MdLocationOn } from 'react-icons/md';
+import { FaTag, FaLeaf } from 'react-icons/fa';
 
-const CATEGORY_COLORS = {
-  fruit:     'bg-pink-50 text-pink-700 border-pink-100',
-  vegetable: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  grain:     'bg-amber-50 text-amber-700 border-amber-100',
-  other:     'bg-gray-50 text-gray-600 border-gray-200',
-};
+export function ProductCard({ 
+    product, 
+    onAddToCart, 
+    onViewDetail,
+    isOrder = false 
+}) {
+    // Determine category styling
+    const categoryStyles = {
+        'Vegetables': 'text-emerald-600 bg-emerald-50 border-emerald-100',
+        'Fruits': 'text-orange-600 bg-orange-50 border-orange-100',
+        'Grains': 'text-amber-600 bg-amber-50 border-amber-100',
+        'Dairy': 'text-blue-600 bg-blue-50 border-blue-100',
+        'default': 'text-gray-600 bg-gray-50 border-gray-100'
+    };
 
-/**
- * mode="browse"   – public marketplace card (Buy Now on hover, only if onAddToCart provided)
- * mode="pending"  – admin-approved, awaiting vendor Accept / Later (on hover)
- * mode="later"    – shelved by vendor, can Accept or Delete (on hover)
- * mode="active"   – live listing in farmer's view (no hover action)
- */
-export const ProductCard = ({ product, onAddToCart, mode = 'browse', onAccept, onLater, onDelete }) => {
-  const categoryColor = CATEGORY_COLORS[product.cropType] || CATEGORY_COLORS.other;
+    const categoryColor = categoryStyles[product.category] || categoryStyles.default;
 
-  return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col">
-
-      {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
-        {product.mediaType === 'video' ? (
-          <video
-            src={product.image}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            muted
-            playsInline
-            controls
-          />
-        ) : (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            onError={e => { e.target.src = 'https://placehold.co/400x400?text=No+Photo'; }}
-          />
-        )}
-
-        {/* Category badge — top-left */}
-        <span className={`absolute top-3 left-3 text-xs px-2 py-1 rounded-full font-semibold border ${categoryColor}`}>
-          {product.ticketCategory || (product.cropType ? product.cropType.charAt(0).toUpperCase() + product.cropType.slice(1) : 'Other')}
-        </span>
-
-        {/* Status badge — top-right (vendor modes only) */}
-        {mode === 'pending' && (
-          <span className="absolute top-3 right-3 text-[10px] px-2 py-1 rounded-full bg-amber-400 text-amber-900 font-bold shadow">
-            Admin Approved
-          </span>
-        )}
-        {mode === 'later' && (
-          <span className="absolute top-3 right-3 text-[10px] px-2 py-1 rounded-full bg-gray-500 text-white font-bold shadow">
-            Shelved
-          </span>
-        )}
-        {mode === 'active' && (
-          <span className="absolute top-3 right-3 text-[10px] px-2 py-1 rounded-full bg-emerald-500 text-white font-bold shadow">
-            Live
-          </span>
-        )}
-
-        {/* Hover action overlay — slides up */}
-        <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/70 via-black/40 to-transparent">
-          {mode === 'browse' && onAddToCart && (
-            <button
-              onClick={() => onAddToCart?.(product)}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center gap-2 text-sm shadow-lg"
-            >
-              <FaShoppingCart size={13} />
-              Buy Now
-            </button>
-          )}
-          {mode === 'pending' && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => onAccept?.(product.id)}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-1 text-xs shadow-lg"
-                title="Accept and publish to marketplace"
-              >
-                ✓ Accept
-              </button>
-              <button
-                onClick={() => onLater?.(product.id)}
-                className="flex-1 bg-amber-400 hover:bg-amber-500 text-white py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-1 text-xs shadow-lg"
-                title="Decide later"
-              >
-                ⏲ Later
-              </button>
+    return (
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="group relative bg-white rounded-sm overflow-hidden border border-gray-100 flex flex-col h-full"
+        >
+            {/* Image Container — No Hover Scale */}
+            <div className="relative aspect-square rounded-sm overflow-hidden bg-gray-50 ring-1 ring-black/5 m-1">
+                <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = "https://placehold.co/200x200?text=Harvest"; }}
+                />
+                
+                {/* Status Badge — Static Top-Left */}
+                <div className="absolute top-1 left-1 z-10">
+                    <div className="px-1.5 py-0.5 bg-white/95 backdrop-blur-md rounded-sm border border-emerald-100/50">
+                        <span className="text-[7px] font-black text-emerald-700 uppercase tracking-widest whitespace-nowrap">
+                            {product.ticketCategory || product.cropType || "In Stock"}
+                        </span>
+                    </div>
+                </div>
+ 
+                {/* Quick Buy Button — Permanently Visible */}
+                <div className="absolute bottom-1 right-1 z-20">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAddToCart?.(product);
+                        }}
+                        className="w-7 h-7 bg-emerald-600 text-white rounded-sm flex items-center justify-center transition-all active:scale-90"
+                    >
+                        <MdShoppingBasket className="w-3.5 h-3.5" />
+                    </button>
+                </div>
             </div>
-          )}
-          {mode === 'later' && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => onAccept?.(product.id)}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-1 text-xs shadow-lg"
-                title="Accept and publish to marketplace"
-              >
-                ✓ Accept
-              </button>
-              <button
-                onClick={() => onDelete?.(product.id)}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-1 text-xs shadow-lg"
-                title="Delete listing"
-              >
-                🗑 Delete
-              </button>
+
+            {/* Info Section — Compact & Clean */}
+            <div className="flex-1 p-3 sm:p-4 pt-1 sm:pt-1.5 flex flex-col justify-between">
+                <div>
+                    <div className="flex items-center gap-1.5 mb-1 opacity-60">
+                        <FaLeaf className="text-[8px] text-emerald-500" />
+                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 truncate uppercase tracking-widest leading-none">
+                            Freshly Harvested
+                        </p>
+                    </div>
+                    
+                    <h3 className="text-xs sm:text-sm font-black text-gray-900 leading-tight mb-1 truncate group-hover:text-emerald-700 transition-colors">
+                        {product.name}
+                    </h3>
+
+                    <div className="flex items-center gap-1 text-[8px] sm:text-[10px] text-gray-400 font-medium mb-2 uppercase tracking-tighter">
+                        <MdLocationOn className="text-emerald-500 shrink-0" />
+                        <span className="truncate">{product.location || 'Local Farm'}</span>
+                    </div>
+                </div>
+
+                <div className="flex items-baseline justify-between pt-2 border-t border-gray-50">
+                    <div className="flex items-baseline gap-0.5">
+                        <span className="text-sm sm:text-lg font-black text-gray-900 tracking-tighter">₹{product.price}</span>
+                        <span className="text-[7px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest">/ {product.unit || 'kg'}</span>
+                    </div>
+                </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="p-4 flex flex-col gap-1.5 flex-1">
-
-        {/* Crop name tag */}
-        {product.cropName && (
-          <span className="text-xs font-medium text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full self-start">
-            {product.cropName}
-          </span>
-        )}
-
-        {/* Title */}
-        <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
-          {product.name}
-        </h3>
-
-        {/* Description */}
-        {product.description && (
-          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-            {product.description}
-          </p>
-        )}
-
-        {/* Meta row: quantity + location */}
-        <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-          {product.quantity && (
-            <span className="flex items-center gap-1">
-              <FaBoxOpen size={10} className="text-gray-400" />
-              {product.quantity} {product.unit}
-            </span>
-          )}
-          {product.location && (
-            <span className="flex items-center gap-1 truncate">
-              <FaMapMarkerAlt size={10} className="text-gray-400" />
-              {product.location}
-            </span>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-gray-100 mt-1 pt-2 flex items-center justify-between">
-          {/* Price */}
-          <span className="text-base font-bold text-gray-900">
-            ₹{product.price.toLocaleString('en-IN')}
-            <span className="text-xs font-normal text-gray-400 ml-1">/{product.unit}</span>
-          </span>
-
-          {/* Seller */}
-          <div className="flex items-center gap-1.5">
-            {product.sellerAvatar ? (
-              <img
-                src={product.sellerAvatar}
-                alt={product.sellerName}
-                className="w-5 h-5 rounded-full object-cover ring-1 ring-gray-200"
-              />
-            ) : (
-              <div className="w-5 h-5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold flex items-center justify-center ring-1 ring-green-200">
-                {product.sellerName?.charAt(0)?.toUpperCase() || 'F'}
-              </div>
-            )}
-            <span className="text-xs text-gray-500 max-w-[80px] truncate">{product.sellerName}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
+        </motion.div>
+    );
+}

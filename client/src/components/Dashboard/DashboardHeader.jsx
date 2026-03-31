@@ -1,128 +1,79 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdSearch, MdNotifications, MdMail, MdMenu, MdChevronLeft } from "react-icons/md";
+import { MdSearch, MdNotifications, MdMail, MdChevronLeft, MdChevronRight, MdMenu } from "react-icons/md";
 
-const DashboardHeader = ({ sidebarOpen, setSidebarOpen, isSidebarMinimized, setIsSidebarMinimized }) => {
+const DashboardHeader = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (err) {
-        console.error("Failed to parse user from localStorage", err);
-      }
+      try { setUser(JSON.parse(storedUser)); }
+      catch (err) { console.error("Failed to parse user", err); }
     }
   }, []);
 
-  const currentPath = location.pathname.replace("/", "").replace("-", " ") || "overview";
+  const path = location.pathname.split("/").pop() || "overview";
+  const currentPath = path === "dashboard" ? "overview" : path.replace("-", " ");
   const capitalized = currentPath.charAt(0).toUpperCase() + currentPath.slice(1);
 
   return (
-    <header className="sticky top-0 z-10 bg-gray-50 w-full max-w-full px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-3 shadow">
-      {/* Desktop View */}
-      <div className="hidden lg:flex items-center justify-between w-full">
-        <div className="flex items-center space-x-4">
+    <header className="sticky top-0 z-[40] bg-white border-b border-gray-100 py-3 px-4 md:px-6">
+      <div className="max-w-5xl mx-auto flex items-center justify-between">
+        {/* Left: Sidebar Toggle & Breadcrumbs */}
+        <div className="flex items-center gap-4">
           <button
-  onClick={() => setIsSidebarMinimized((prev) => !prev)}
-  className="w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
->
-  {isSidebarMinimized ? (
-    <MdMenu className="w-3 h-3 text-gray-600" />
-  ) : (
-    <MdChevronLeft className="w-3 h-3 text-gray-600" />
-  )}
-</button>
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="flex items-center justify-center w-9 h-9 rounded-sm border border-gray-100 hover:bg-gray-50 transition-all active:scale-95"
+          >
+            {sidebarOpen ? <MdChevronLeft className="w-5 h-5 text-gray-500" /> : <MdChevronRight className="w-5 h-5 text-gray-500" />}
+          </button>
 
-          <nav className="flex items-center text-sm text-gray-500 truncate">
-            <Link to="/" className="hover:text-green-700 font-medium transition">
-              Dashboard
-            </Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-green-700 font-semibold capitalize">{capitalized}</span>
+          <nav className="hidden sm:flex items-center text-xs font-black tracking-[0.1em]">
+            <Link to="/dashboard" className="text-gray-400 hover:text-green-600 transition">DASHBOARD</Link>
+            <span className="mx-2 text-gray-300">/</span>
+            <span className="text-emerald-700 uppercase">{path === 'dashboard' || !path ? 'OVERVIEW' : capitalized}</span>
           </nav>
         </div>
 
-        <div className="flex items-center space-x-2 md:space-x-4">
-          <div className="relative w-40 sm:w-52 md:w-64">
-            <MdSearch className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        {/* Right: Actions & Profile */}
+        <div className="flex items-center gap-2 sm:gap-6">
+          {/* Search Bar - Minimalist */}
+          <div className="relative hidden sm:block">
+            <MdSearch className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="search"
-              placeholder="Search anything..."
-              className="w-full pl-10 pr-10 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+              placeholder="Search..."
+              className="w-48 md:w-64 pl-10 pr-4 py-2 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-50 focus:outline-none transition-all text-xs"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">⌘F</span>
           </div>
 
-          <button className="p-2 text-gray-400 hover:text-gray-600">
-            <MdMail className="w-5 h-5" />
-          </button>
-
-          <button className="relative p-2 text-gray-400 hover:text-gray-600">
-            <MdNotifications className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-
-          <div className="flex items-center space-x-3 group cursor-pointer hover:bg-gray-200 px-2 py-1 rounded-md transition">
-            <img
-              src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop&crop=face"
-              alt="Profile"
-              className="w-9 h-9 rounded-full object-cover"
-            />
-            {user && (
-              <div className="text-sm">
-                <div className="font-medium text-gray-900 truncate">{user.name || "User"}</div>
-                <div className="text-gray-500 text-xs truncate">{user.email}</div>
-              </div>
-            )}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-sm transition-all relative">
+              <MdNotifications className="w-5 h-5" />
+              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border-2 border-white" />
+            </button>
+            <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-sm transition-all">
+              <MdMail className="w-5 h-5" />
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Mobile View */}
-      <div className="flex lg:hidden items-center justify-between w-full">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg hover:bg-gray-100 transition"
-          aria-label="Toggle Sidebar"
-        >
-          <MdMenu className="w-5 h-5 text-gray-600" />
-        </button>
+          <div className="h-8 w-[1px] bg-gray-100 mx-2 hidden sm:block" />
 
-        <div className="relative w-24 sm:w-32 md:w-40">
-          <MdSearch className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="search"
-            placeholder="Search..."
-            className="w-full pl-10 pr-3 py-1.5 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-xs sm:text-sm"
-          />
-        </div>
-
-        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
-          <button className="p-2 text-gray-400 hover:text-gray-600">
-            <MdMail className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-
-          <button className="relative p-2 text-gray-400 hover:text-gray-600">
-            <MdNotifications className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
-            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
-          </button>
-
-          <div className="relative group cursor-pointer">
-            <img
-              src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop&crop=face"
-              alt="Profile"
-              className="w-7 h-7 rounded-full object-cover"
-            />
-            {user && (
-              <div className="absolute top-full right-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                {user.email}
-              </div>
-            )}
+          <div className="flex items-center gap-3 pl-2 cursor-pointer group">
+            <div className="text-right hidden md:block">
+              <p className="text-xs font-bold text-gray-800 truncate leading-none mb-1">{user?.name || "User"}</p>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest leading-none">{user?.role || "Member"}</p>
+            </div>
+            <div className="relative">
+              <img
+                src={user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "U") + "&background=10b981&color=fff"}
+                alt="Profile"
+                className="w-9 h-9 rounded-sm object-cover ring-2 ring-transparent group-hover:ring-green-100 transition-all"
+              />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+            </div>
           </div>
         </div>
       </div>

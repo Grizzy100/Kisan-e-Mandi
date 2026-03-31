@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+const ORDER_STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+
 const orderSchema = new mongoose.Schema(
   {
     customerId: {
@@ -29,9 +31,41 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"],
+      enum: ORDER_STATUSES,
       default: "pending",
     },
+
+    statusHistory: [
+      {
+        from: {
+          type: String,
+          enum: ORDER_STATUSES,
+        },
+        to: {
+          type: String,
+          enum: ORDER_STATUSES,
+          required: true,
+        },
+        changedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        changedByRole: {
+          type: String,
+          enum: ["customer", "farmer", "admin", "system"],
+          default: "system",
+        },
+        note: {
+          type: String,
+          trim: true,
+          maxlength: 250,
+        },
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
 
     paymentMethod: { type: String, default: "cod" }, // Cash on Delivery — no gateway yet
     deliveryAddress: { type: String, required: true },

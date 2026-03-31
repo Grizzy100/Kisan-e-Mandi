@@ -1,12 +1,15 @@
+
 import express from "express";
 import { getItems, getItem, getMyItems, updateItem, deleteItem, publishItem, shelveItem, debugAllItems, fixStaleItems } from "../controllers/itemController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { getItemStatusCounts } from "../controllers/itemStatsController.js";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", getItems);                         // marketplace (public)
-router.get("/debug/all", debugAllItems);           // DEBUG: all items with status
-router.post("/debug/fix-stale", fixStaleItems);    // FIX: promote approved_hidden → published
+router.get("/status-counts", protect, getItemStatusCounts); // unified status counts
+router.get("/debug/all", protect, authorizeRoles("admin"), debugAllItems);
+router.post("/debug/fix-stale", protect, authorizeRoles("admin"), fixStaleItems);
 router.get("/me", protect, getMyItems);            // my listings
 router.get("/:id", getItem);                       // single item
 router.put("/:id", protect, updateItem);           // update my item

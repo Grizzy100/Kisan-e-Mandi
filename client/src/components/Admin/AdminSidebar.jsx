@@ -15,7 +15,7 @@ import { toast } from "react-toastify";
 
 const NAV = [
     { key: "analytics", label: "Analytics", icon: MdDashboard },
-    { key: "tickets", label: "Tickets", icon: MdConfirmationNumber, badge: true },
+    { key: "approvals", label: "Approvals", icon: MdConfirmationNumber, badge: true },
     { key: "vendors", label: "Manage Vendors", icon: MdPeople },
     { key: "customers", label: "Manage Customers", icon: MdPerson },
     { key: "problems", label: "Problems", icon: MdBugReport },

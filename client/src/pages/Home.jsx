@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
-import FeaturedProducts from "../components/FeaturedProducts";
+import Services from "../components/Services";
+import Testimonial from "../components/Testimonial";
+
 import Footer from "../components/Footer";
 
 const Home = () => {
@@ -37,7 +39,8 @@ const Home = () => {
         <div ref={heroRef}>
           <Hero />
         </div>
-        <FeaturedProducts />
+        <Services />
+        <Testimonial />
         <Footer />
       </main>
     </div>

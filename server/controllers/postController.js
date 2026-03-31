@@ -2,6 +2,7 @@ import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import Item from "../models/Item.js";
 import Order from "../models/Order.js";
+import { ITEM_STATUS, canTransitionItem } from "../utils/itemStateMachine.js";
 
 // ─────────────────────────────────────────────────────────────────
 // 1. CREATE POST (vendor uploads photo/video → pending approval)
@@ -77,9 +78,12 @@ export const getAllPosts = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 export const getMyPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    const posts = await Post.find({ userId: req.user._id })
+      .populate("userId", "name avatar email")
+      .sort({ createdAt: -1 });
     res.status(200).json(posts);
   } catch (error) {
+    console.error("getMyPosts error:", error);
     res.status(500).json({ message: "Server error." });
   }
 };
@@ -272,30 +276,61 @@ export const approvePost = async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found." });
 
-    post.status = "approved";
-    post.reviewedBy = req.user._id;
-    post.reviewedAt = new Date();
-    await post.save();
+    if (post.status !== "approved") {
+      post.status = "approved";
+      post.reviewedBy = req.user._id;
+      post.reviewedAt = new Date();
+      await post.save();
+    }
 
     let item = null;
-    if (post.cropName && post.price) {
-      item = await Item.create({
-        postId: post._id,
-        sellerId: post.userId,
-        name: post.name,
-        description: post.description,
-        cropType: post.cropType || "other",
-        cropName: post.cropName,
-        price: post.price,
-        imageUrl: post.imageUrl || post.mediaUrl,
-        mediaUrl: post.mediaUrl || post.imageUrl,
-        mediaType: post.mediaType,
-        location: post.location,
-      });
+
+    const parsedPrice = Number(post.price);
+    const hasValidListingData =
+      Boolean(post.cropName) && Number.isFinite(parsedPrice) && parsedPrice > 0;
+
+    if (hasValidListingData) {
+      const existingItem = await Item.findOne({ postId: post._id });
+
+      if (!existingItem) {
+        item = await Item.create({
+          postId: post._id,
+          sellerId: post.userId,
+          name: post.name,
+          description: post.description,
+          cropType: post.cropType || "other",
+          cropName: post.cropName,
+          price: parsedPrice,
+          imageUrl: post.imageUrl || post.mediaUrl,
+          mediaUrl: post.mediaUrl || post.imageUrl,
+          mediaType: post.mediaType,
+          location: post.location,
+          status: ITEM_STATUS.APPROVED_HIDDEN,
+          isActive: false,
+        });
+      } else {
+        existingItem.name = post.name;
+        existingItem.description = post.description;
+        existingItem.cropType = post.cropType || "other";
+        existingItem.cropName = post.cropName;
+        existingItem.price = parsedPrice;
+        existingItem.imageUrl = post.imageUrl || post.mediaUrl;
+        existingItem.mediaUrl = post.mediaUrl || post.imageUrl;
+        existingItem.mediaType = post.mediaType || existingItem.mediaType;
+        existingItem.location = post.location || existingItem.location;
+
+        // Keep old live listings live, but move non-live listings to approved_hidden.
+        if (canTransitionItem(existingItem.status, ITEM_STATUS.APPROVED_HIDDEN)) {
+          existingItem.status = ITEM_STATUS.APPROVED_HIDDEN;
+          existingItem.isActive = false;
+        }
+
+        item = await existingItem.save();
+      }
     }
 
     res.status(200).json({
-      message: "Post approved" + (item ? " and item listed" : ""),
+      message: "Post approved" + (item ? " and listing prepared for farmer publish" : ""),
       post,
       item,
     });

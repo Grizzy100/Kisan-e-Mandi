@@ -1,3 +1,7 @@
+export const getItemStatusCounts = async () => {
+    const res = await axiosInstance.get("/items/status-counts");
+    return res.data;
+};
 import axiosInstance from "./axios";
 
 export const getItems = async (params) => {

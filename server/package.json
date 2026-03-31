@@ -6,7 +6,10 @@
   "scripts": {
     "server": "nodemon server.js",
     "start": "node server.js",
-    "seed": "node scripts/seedAdmin.js"
+    "seed": "node scripts/seedAdmin.js",
+    "items:audit": "node scripts/reconcileItemStates.js",
+    "items:reconcile": "node scripts/reconcileItemStates.js --apply",
+    "items:sync-tickets": "node scripts/reconcileItemStates.js --apply --sync-ticket-status"
   },
   "keywords": [],
   "author": "",

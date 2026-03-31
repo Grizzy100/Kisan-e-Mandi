@@ -56,7 +56,7 @@ const MyTickets = () => {
             {tickets.map((ticket) => (
                 <div
                     key={ticket._id}
-                    className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
+                    className="bg-white border border-gray-100 rounded-sm shadow-sm overflow-hidden"
                 >
                     {/* Ticket Header */}
                     <button
@@ -65,10 +65,10 @@ const MyTickets = () => {
                     >
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${STATUS_STYLES[ticket.status]}`}>
+                                <span className={`text-xs px-2.5 py-0.5 rounded-sm font-medium ${STATUS_STYLES[ticket.status]}`}>
                                     {STATUS_LABEL[ticket.status]}
                                 </span>
-                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 capitalize">
+                                <span className="text-xs px-2.5 py-0.5 rounded-sm bg-gray-100 text-gray-600 capitalize">
                                     {ticket.category}
                                 </span>
                             </div>
@@ -94,7 +94,7 @@ const MyTickets = () => {
                             {ticket.imageUrl && (
                                 <div>
                                     <p className="text-xs text-gray-400 mb-1">Attachment</p>
-                                    <img src={ticket.imageUrl} alt="Ticket attachment" className="max-h-48 rounded-xl object-contain" />
+                                    <img src={ticket.imageUrl} alt="Ticket attachment" className="max-h-48 rounded-sm object-contain" />
                                 </div>
                             )}
                             <div>

@@ -25,6 +25,7 @@
     "react-router-dom": "^7.6.2",
     "react-scroll": "^1.9.3",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.8.1",
     "smooth-scrollbar": "^8.8.4",
     "tailwindcss": "^4.1.10"
   },

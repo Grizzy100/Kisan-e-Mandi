@@ -143,7 +143,7 @@ const App = () => {
               <Route path="/admin/login" element={<AdminLogin />} />
 
               <Route
-                path="/dashboard"
+                path="/dashboard/*"
                 element={
                   <PrivateRoute allowedRoles={['farmer', 'admin', 'customer']}>
                     <MainDashboard />

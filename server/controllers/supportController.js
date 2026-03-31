@@ -1,6 +1,14 @@
 import SupportTicket from "../models/SupportTicket.js";
 import Item from "../models/Item.js";
 import nodemailer from "nodemailer";
+import {
+  ITEM_STATUS,
+  TICKET_STATUS,
+  canTransitionItem,
+  canTransitionTicket,
+  getItemStateForTicketStatus,
+  isValidTicketStatus,
+} from "../utils/itemStateMachine.js";
 
 // ── Helper: Nodemailer transporter ──────────────────────────────
 const createTransporter = () =>
@@ -131,31 +139,60 @@ export const updateTicketStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body; // e.g. "resolved" (for approve), "rejected"
 
+    if (!status || !isValidTicketStatus(status)) {
+      return res.status(400).json({
+        message: "Invalid status. Allowed values: open, in-progress, resolved, rejected.",
+      });
+    }
+
     const ticket = await SupportTicket.findById(id).populate("userId");
     if (!ticket) return res.status(404).json({ message: "Ticket not found." });
 
-    ticket.status = status;
-    await ticket.save();
+    if (!canTransitionTicket(ticket.status, status)) {
+      return res.status(409).json({
+        message: `Ticket cannot move from '${ticket.status}' to '${status}'.`,
+      });
+    }
+
+    if (ticket.status !== status) {
+      ticket.status = status;
+      await ticket.save();
+    }
 
     // Find the drafted item and update its status too.
     console.log(`🔍 [updateTicketStatus] Looking for item with ticketId: ${id}`);
     const item = await Item.findOne({ ticketId: id });
     console.log(`🔍 [updateTicketStatus] Item found:`, item ? `${item._id} (status: ${item.status})` : "NOT FOUND");
-    let itemStatusField = "pending_admin";
+    let itemStatusField = ITEM_STATUS.PENDING_ADMIN;
 
     if (item) {
-      if (status === "resolved") {
-        // Admin approved — move to approved_hidden; farmer must Accept to publish
-        itemStatusField = "approved_hidden";
-        item.status = "approved_hidden";
-        item.isActive = false;
-        console.log(`✅ [updateTicketStatus] Setting item ${item._id} to approved_hidden (awaiting farmer Accept)`);
-      } else if (status === "rejected") {
-        itemStatusField = "rejected";
-        item.status = "rejected";
-        item.isActive = false;
-        console.log(`❌ [updateTicketStatus] Setting item ${item._id} to rejected`);
+      const targetItemState = getItemStateForTicketStatus(status);
+      itemStatusField = targetItemState.status;
+
+      const isLegacyPublishedResolvedCase =
+        item.status === ITEM_STATUS.PUBLISHED &&
+        status === TICKET_STATUS.RESOLVED;
+
+      if (isLegacyPublishedResolvedCase) {
+        // Backward compatibility: keep already-live legacy listing live.
+        itemStatusField = ITEM_STATUS.PUBLISHED;
+        console.log(`ℹ️ [updateTicketStatus] Keeping legacy live item ${item._id} as published.`);
+      } else if (!canTransitionItem(item.status, targetItemState.status)) {
+        return res.status(409).json({
+          message: `Item cannot move from '${item.status}' to '${targetItemState.status}'.`,
+        });
+      } else {
+        item.status = targetItemState.status;
+        item.isActive = targetItemState.isActive;
+        if (targetItemState.status === ITEM_STATUS.APPROVED_HIDDEN) {
+          console.log(`✅ [updateTicketStatus] Setting item ${item._id} to approved_hidden (awaiting farmer publish)`);
+        } else if (targetItemState.status === ITEM_STATUS.REJECTED) {
+          console.log(`❌ [updateTicketStatus] Setting item ${item._id} to rejected`);
+        } else {
+          console.log(`ℹ️ [updateTicketStatus] Keeping item ${item._id} as pending_admin during review`);
+        }
       }
+
       const saved = await item.save();
       console.log(`💾 [updateTicketStatus] Item saved:`, saved.status, saved.isActive);
     } else {
@@ -166,7 +203,7 @@ export const updateTicketStatus = async (req, res) => {
     try {
       if (ticket.email) {
         const transporter = createTransporter();
-        const statLabel = status === "resolved" ? "Approved" : "Rejected";
+        const statLabel = status === TICKET_STATUS.RESOLVED ? "Approved" : "Rejected";
 
         await transporter.sendMail({
           from: `"Kisan e-Mandi Admin" <${process.env.EMAIL_USER}>`,
@@ -176,7 +213,7 @@ export const updateTicketStatus = async (req, res) => {
             <div style="font-family:sans-serif;padding:20px;">
               <h2>Your request has been ${statLabel}</h2>
               <p>Your ticket for <strong>${ticket.subject}</strong> has been updated to <strong>${status}</strong> by our admins.</p>
-              ${status === "resolved" ? '<p>Your crop listing has been <strong>approved</strong> and is now live on the marketplace.</p>' : '<p>Sorry, your request was denied at this time.</p>'}
+              ${status === TICKET_STATUS.RESOLVED ? '<p>Your crop listing is <strong>approved</strong>. Please open <strong>My Listings</strong> and click <strong>Accept</strong> to publish it on the marketplace.</p>' : '<p>Sorry, your request was denied at this time.</p>'}
             </div>
           `,
         });

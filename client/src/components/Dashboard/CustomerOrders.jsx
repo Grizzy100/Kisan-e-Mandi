@@ -1,53 +1,32 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getMyOrders, updateOrderStatus } from "../../api/orderAPI";
 import { toast } from "react-toastify";
-import { MdLocalShipping, MdCheckCircle, MdCancel, MdHourglassTop, MdRefresh } from "react-icons/md";
+import { 
+  MdLocalShipping, MdCheckCircle, MdCancel, 
+  MdRefresh, MdHistory, MdShoppingBasket, MdStar, MdTimeline
+} from "react-icons/md";
+import { motion, AnimatePresence } from "framer-motion";
+import TimelineTooltip from "./TimelineTooltip";
+import { formatRelativeTime } from "../../utils/timeUtils";
+import OrderModal from "./Item/OrderModal";
 
 const STATUS_STYLE = {
-  pending:   "bg-yellow-100 text-yellow-700 border-yellow-200",
-  confirmed: "bg-blue-100 text-blue-700 border-blue-200",
-  shipped:   "bg-purple-100 text-purple-700 border-purple-200",
-  delivered: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  cancelled: "bg-red-100 text-red-600 border-red-200",
+  pending:   "bg-orange-50 text-orange-700 border-orange-100",
+  confirmed: "bg-blue-50 text-blue-700 border-blue-100",
+  shipped:   "bg-purple-50 text-purple-700 border-purple-100",
+  delivered: "bg-green-50 text-green-700 border-green-100",
+  cancelled: "bg-red-50 text-red-600 border-red-100",
 };
-
-const STATUS_ICON = {
-  pending:   <MdHourglassTop className="w-4 h-4" />,
-  confirmed: <MdCheckCircle className="w-4 h-4" />,
-  shipped:   <MdLocalShipping className="w-4 h-4" />,
-  delivered: <MdCheckCircle className="w-4 h-4" />,
-  cancelled: <MdCancel className="w-4 h-4" />,
-};
-
-const STEPS = ["pending", "confirmed", "shipped", "delivered"];
-
-function OrderProgressBar({ status }) {
-  const idx = STEPS.indexOf(status);
-  if (status === "cancelled") return (
-    <p className="text-xs text-red-500 font-medium mt-1">Order cancelled</p>
-  );
-  return (
-    <div className="flex items-center gap-1 mt-2">
-      {STEPS.map((step, i) => (
-        <React.Fragment key={step}>
-          <div
-            className={`flex-1 h-1.5 rounded-full transition-all ${
-              i <= idx ? "bg-emerald-500" : "bg-gray-200"
-            }`}
-          />
-          {i < STEPS.length - 1 && (
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${i < idx ? "bg-emerald-500" : "bg-gray-300"}`} />
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
 
 export default function CustomerOrders() {
+  const navigate = useNavigate();
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(null);
+  const [reorderProduct, setReorderProduct] = useState(null);
+
+  const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -72,89 +51,154 @@ export default function CustomerOrders() {
     }
   };
 
+  const handleBuyAgain = (order) => {
+    setReorderProduct({
+      id: order.itemId?._id || order.itemId,
+      name: order.itemName,
+      price: order.pricePerUnit || (order.totalPrice / order.quantity),
+      unit: order.itemId?.unit || "kg",
+      image: order.mediaUrl || order.itemId?.mediaUrl,
+      sellerName: order.sellerId?.name || "Farmer",
+      location: order.deliveryAddress?.split(',')[0]
+    });
+  };
+
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Track your purchases from the marketplace.</p>
+    <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6 space-y-10 font-inter">
+      {/* Standardized Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-gray-100 pb-8">
+        <div className="space-y-2">
+            <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight leading-none">
+                Order History
+            </h1>
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Support your local farming community.</p>
         </div>
         <button
           onClick={fetchOrders}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm text-gray-600 font-medium transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-sm text-[10px] font-black text-gray-900 shadow-sm transition-all active:scale-95 uppercase tracking-widest"
         >
-          <MdRefresh className="w-4 h-4" /> Refresh
+          <MdRefresh className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Sync Orders
         </button>
       </div>
 
       {loading ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-48 bg-gray-50 rounded-sm animate-pulse" />
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-200">
-          <p className="text-4xl mb-3">🛒</p>
-          <p className="text-gray-500 font-medium">No orders yet.</p>
-          <p className="text-gray-400 text-sm mt-1">Browse the marketplace and place your first order!</p>
+        <div className="text-center py-24 bg-white rounded-sm border border-dashed border-gray-200">
+          <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">No orders found</h3>
+          <p className="text-gray-400 text-xs mt-2 font-bold uppercase tracking-widest leading-relaxed">Your journey begins with the first harvest.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div key={order._id} className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-3">
-              <div className="flex items-start gap-4">
-                <img
-                  src={order.mediaUrl || order.itemId?.mediaUrl || "https://placehold.co/64x64?text=Item"}
-                  alt={order.itemName}
-                  className="w-16 h-16 rounded-xl object-cover border border-gray-200 flex-shrink-0"
-                  onError={(e) => { e.target.src = "https://placehold.co/64x64?text=Item"; }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-gray-900 truncate">{order.itemName}</h3>
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${STATUS_STYLE[order.status]}`}>
-                      {STATUS_ICON[order.status]} {order.status}
-                    </span>
-                  </div>
-                  {order.ticketCategory && (
-                    <p className="text-xs text-emerald-700 font-medium">{order.ticketCategory}</p>
-                  )}
-                  <div className="flex flex-wrap gap-3 mt-1 text-sm text-gray-600">
-                    <span>Qty: <strong>{order.quantity} {order.itemId?.unit || "kg"}</strong></span>
-                    <span>Total: <strong className="text-green-700">₹{order.totalPrice.toLocaleString("en-IN")}</strong></span>
-                    <span>COD</span>
-                  </div>
-                  <OrderProgressBar status={order.status} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence mode="popLayout">
+            {orders.map((order) => (
+              <motion.div 
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                key={order._id} 
+                className="group relative bg-white border border-gray-100 rounded-sm shadow-sm flex flex-col transition-all duration-300"
+              >
+                {/* Horizontal Tooltip triggered on card hover (LG only) */}
+                <div className="hidden lg:block">
+                    <TimelineTooltip 
+                        statusHistory={order.statusHistory} 
+                        currentStatus={order.status} 
+                        createdAt={order.createdAt}
+                    />
                 </div>
-              </div>
 
-              <div className="text-xs text-gray-400 border-t border-gray-50 pt-3 flex flex-wrap gap-4 justify-between">
-                <div>
-                  <span className="font-medium text-gray-600">Vendor: </span>
-                  {order.sellerId?.name || "Farmer"}
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Deliver to: </span>
-                  {order.deliveryAddress}
-                </div>
-                <div>
-                  {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                </div>
-              </div>
+                <div className="p-4 flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-3">
+                      <div className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase border ${STATUS_STYLE[order.status]}`}>
+                        {order.status}
+                      </div>
+                      <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">
+                        #{order._id.slice(-8).toUpperCase()}
+                      </span>
+                  </div>
 
-              {order.status === "pending" && (
-                <button
-                  onClick={() => handleCancel(order._id)}
-                  disabled={cancelling === order._id}
-                  className="text-xs text-red-500 hover:text-red-600 font-medium disabled:opacity-50"
-                >
-                  {cancelling === order._id ? "Cancelling…" : "Cancel Order"}
-                </button>
-              )}
-            </div>
-          ))}
+                  <div className="flex gap-4 mb-4">
+                    <div className="w-16 h-16 bg-gray-50 rounded-sm border border-gray-100 overflow-hidden shrink-0">
+                        <img
+                            src={order.mediaUrl || order.itemId?.mediaUrl || "https://placehold.co/100x100?text=Harvest"}
+                            alt={order.itemName}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate mb-1">
+                            {order.itemName}
+                        </h3>
+                        <p className="text-[10px] font-bold text-gray-400 flex items-center gap-1 uppercase tracking-widest">
+                            <MdStar className="text-emerald-500" />
+                            {order.sellerId?.name || "Local Farmer"}
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                            {formatRelativeTime(order.createdAt)}
+                        </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 py-3 border-y border-gray-50 mb-4">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-gray-300 uppercase tracking-tight mb-0.5">Quantity</span>
+                      <span className="text-xs font-black text-gray-900">{order.quantity} {order.itemId?.unit || "kg"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-gray-300 uppercase tracking-tight mb-0.5">Paid</span>
+                      <span className="text-xs font-black text-emerald-700 font-mono">₹{order.totalPrice}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-auto">
+                    {/* Mobile Track Button */}
+                    <button 
+                        onClick={() => navigate(`/dashboard/track/${order._id}`)}
+                        className="lg:hidden flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white border border-gray-900 text-gray-900 text-[9px] font-black rounded-sm uppercase tracking-widest active:bg-gray-50 transition-colors"
+                    >
+                        <MdTimeline className="w-3.5 h-3.5" />
+                        Track
+                    </button>
+
+                    {["pending", "confirmed"].includes(order.status) ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleCancel(order._id); }}
+                        disabled={cancelling === order._id}
+                        className="flex-1 py-2.5 bg-red-600 text-white text-[9px] font-black rounded-sm uppercase tracking-widest active:bg-red-700 transition-colors"
+                      >
+                        {cancelling === order._id ? "..." : "Cancel"}
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleBuyAgain(order); }}
+                        className="flex-1 py-2.5 bg-emerald-600 text-white text-[9px] font-black rounded-sm uppercase tracking-widest active:bg-emerald-700 transition-colors"
+                      >
+                        Buy Again
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
+      )}
+
+      {reorderProduct && (
+        <OrderModal
+          product={reorderProduct}
+          userRole={user?.role}
+          onClose={() => setReorderProduct(null)}
+          onSuccess={() => {
+            setReorderProduct(null);
+            fetchOrders();
+          }}
+        />
       )}
     </div>
   );

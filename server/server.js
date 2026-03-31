@@ -13,6 +13,7 @@ import supportRoutes from "./routes/supportRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 // Connect to MongoDB
 connectDB();
@@ -41,6 +42,7 @@ app.use("/api/support", supportRoutes);
 app.use("/api/items",   itemRoutes);
 app.use("/api/upload",  uploadRoutes);
 app.use("/api/orders",  orderRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Central Error Handling
 app.use(errorHandler);

@@ -10,7 +10,7 @@ export function AnalyticsChart({ monthlyData, loading }) {
   const maxValue = Math.max(...data.map((item) => item.total), 1);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white rounded-sm border border-gray-200 p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Monthly Activity Overview</h3>
         <p className="text-sm text-gray-500">Posts and activity for the current year</p>
@@ -26,7 +26,7 @@ export function AnalyticsChart({ monthlyData, loading }) {
                 {item.total > 0 ? item.total : ""}
               </span>
               <div
-                className="w-full bg-green-600 rounded-t-md min-h-1 transition-all duration-300 hover:opacity-80"
+                className="w-full bg-green-600 rounded-t-sm min-h-1 transition-all duration-300 hover:opacity-80"
                 style={{ height: `${(item.total / maxValue) * 230}px` }}
               />
               <span className="text-xs text-gray-500">{item.name}</span>

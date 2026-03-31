@@ -1,24 +1,57 @@
 import Item from "../models/Item.js";
+import {
+  ITEM_STATUS,
+  MARKETPLACE_SOURCE_FILTER,
+  canPublishFromStatus,
+  canShelveFromStatus,
+} from "../utils/itemStateMachine.js";
+
+const UPDATE_ALLOWED_FIELDS = new Set([
+  "name",
+  "description",
+  "cropType",
+  "cropName",
+  "ticketCategory",
+  "price",
+  "unit",
+  "quantity",
+  "mediaUrl",
+  "imageUrl",
+  "mediaType",
+  "location",
+]);
 
 // GET all active items (marketplace)
 export const getItems = async (req, res) => {
   try {
     const { cropType, minPrice, maxPrice, search } = req.query;
-    // Only fetch published listings created from support tickets
-    const filter = { isActive: true, status: "published", ticketId: { $exists: true, $ne: null } };
+
+    // Public marketplace should only show live listings that came from approved platform flows.
+    const filter = {
+      isActive: true,
+      status: ITEM_STATUS.PUBLISHED,
+      $and: [MARKETPLACE_SOURCE_FILTER],
+    };
 
     if (cropType) filter.cropType = cropType;
+
     if (minPrice || maxPrice) {
       filter.price = {};
-      if (minPrice) filter.price.$gte = Number(minPrice);
-      if (maxPrice) filter.price.$lte = Number(maxPrice);
+      const parsedMinPrice = Number(minPrice);
+      const parsedMaxPrice = Number(maxPrice);
+      if (Number.isFinite(parsedMinPrice)) filter.price.$gte = parsedMinPrice;
+      if (Number.isFinite(parsedMaxPrice)) filter.price.$lte = parsedMaxPrice;
+      if (Object.keys(filter.price).length === 0) delete filter.price;
     }
+
     if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { cropName: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
+      filter.$and.push({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { cropName: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ],
+      });
     }
 
     const items = await Item.find(filter)
@@ -36,7 +69,10 @@ export const getItems = async (req, res) => {
 // GET all items (debug — shows all statuses)
 export const debugAllItems = async (req, res) => {
   try {
-    const items = await Item.find({}, "name status isActive cropType price createdAt ticketId").sort({ createdAt: -1 });
+    const items = await Item.find(
+      {},
+      "name status isActive cropType price createdAt ticketId postId"
+    ).sort({ createdAt: -1 });
     console.log(`🔍 [debugAllItems] Total items in DB: ${items.length}`);
     res.status(200).json({ total: items.length, items });
   } catch (error) {
@@ -45,15 +81,37 @@ export const debugAllItems = async (req, res) => {
   }
 };
 
-// POST fix stale items — promote approved_hidden → published (one-time migration)
+// POST fix stale items — repair inconsistent status/visibility combinations
 export const fixStaleItems = async (req, res) => {
   try {
-    const result = await Item.updateMany(
-      { status: "approved_hidden" },
-      { $set: { status: "published", isActive: true } }
-    );
-    console.log(`🔧 [fixStaleItems] Updated ${result.modifiedCount} stale approved_hidden items to published`);
-    res.status(200).json({ message: `Fixed ${result.modifiedCount} items`, result });
+    const [publishedMadeActive, hiddenMadeInactive, rejectedMadeInactive, pendingMadeInactive] = await Promise.all([
+      Item.updateMany(
+        { status: ITEM_STATUS.PUBLISHED, isActive: false },
+        { $set: { isActive: true } }
+      ),
+      Item.updateMany(
+        { status: ITEM_STATUS.APPROVED_HIDDEN, isActive: true },
+        { $set: { isActive: false } }
+      ),
+      Item.updateMany(
+        { status: ITEM_STATUS.REJECTED, isActive: true },
+        { $set: { isActive: false } }
+      ),
+      Item.updateMany(
+        { status: ITEM_STATUS.PENDING_ADMIN, isActive: true },
+        { $set: { isActive: false } }
+      ),
+    ]);
+
+    const summary = {
+      publishedMadeActive: publishedMadeActive.modifiedCount,
+      approvedHiddenMadeInactive: hiddenMadeInactive.modifiedCount,
+      rejectedMadeInactive: rejectedMadeInactive.modifiedCount,
+      pendingAdminMadeInactive: pendingMadeInactive.modifiedCount,
+    };
+
+    console.log("🔧 [fixStaleItems] Repaired inconsistent item states:", summary);
+    res.status(200).json({ message: "Consistency repair complete", summary });
   } catch (error) {
     console.error("Fix stale items error:", error);
     res.status(500).json({ message: "Server error." });
@@ -92,8 +150,36 @@ export const updateItem = async (req, res) => {
       return res.status(403).json({ message: "Not authorized." });
     }
 
-    const updates = req.body;
-    Object.assign(item, updates);
+    const safeUpdates = {};
+    for (const [key, value] of Object.entries(req.body || {})) {
+      if (UPDATE_ALLOWED_FIELDS.has(key) && value !== undefined) {
+        safeUpdates[key] = value;
+      }
+    }
+
+    if (Object.keys(safeUpdates).length === 0) {
+      return res.status(400).json({
+        message: "No editable fields provided.",
+      });
+    }
+
+    if (safeUpdates.price !== undefined) {
+      const parsedPrice = Number(safeUpdates.price);
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        return res.status(400).json({ message: "Price must be a valid non-negative number." });
+      }
+      safeUpdates.price = parsedPrice;
+    }
+
+    if (safeUpdates.quantity !== undefined) {
+      const parsedQuantity = Number(safeUpdates.quantity);
+      if (!Number.isFinite(parsedQuantity) || parsedQuantity < 0) {
+        return res.status(400).json({ message: "Quantity must be a valid non-negative number." });
+      }
+      safeUpdates.quantity = parsedQuantity;
+    }
+
+    Object.assign(item, safeUpdates);
     await item.save();
 
     res.status(200).json(item);
@@ -130,12 +216,18 @@ export const publishItem = async (req, res) => {
       return res.status(403).json({ message: "Not authorized." });
     }
 
-    // Allow publishing if admin-approved or previously shelved
-    if (item.status === "pending_admin" || item.status === "rejected") {
+    if (item.status === ITEM_STATUS.PUBLISHED && item.isActive) {
+      return res.status(200).json({
+        message: "Item is already live in marketplace.",
+        item,
+      });
+    }
+
+    if (!canPublishFromStatus(item.status)) {
       return res.status(400).json({ message: "Item has not been approved by admin yet." });
     }
 
-    item.status = "published";
+    item.status = ITEM_STATUS.PUBLISHED;
     item.isActive = true;
     await item.save();
 
@@ -156,7 +248,20 @@ export const shelveItem = async (req, res) => {
       return res.status(403).json({ message: "Not authorized." });
     }
 
-    item.status = "shelved";
+    if (item.status === ITEM_STATUS.SHELVED && item.isActive === false) {
+      return res.status(200).json({
+        message: "Item is already shelved.",
+        item,
+      });
+    }
+
+    if (!canShelveFromStatus(item.status)) {
+      return res.status(400).json({
+        message: "Only live published items can be shelved.",
+      });
+    }
+
+    item.status = ITEM_STATUS.SHELVED;
     item.isActive = false;
     await item.save();
 

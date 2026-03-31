@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { StatsCard } from "./StatsCard";
-import { AnalyticsChart } from "./AnalyticsChart";
+import EarningsChart from "./EarningsChart";
 import { RecentActivity } from "./RecentActivity";
 import { DealsCarousel } from "./DealsCarousel";
 import { getDashboardStats } from "../../api/postAPI";
@@ -21,27 +21,34 @@ export function DashboardContent() {
   }, []);
 
   useEffect(() => {
-    // Initial fetch
     fetchStats();
-
-    // Poll every 30 seconds — so Pending Approval count updates when admin approves a post
     const interval = setInterval(fetchStats, 30_000);
     return () => clearInterval(interval);
   }, [fetchStats]);
 
   return (
-    <div className="flex-1 p-6 bg-gray-50 overflow-auto">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="flex-1 bg-gray-50/30 overflow-auto py-8 px-4 font-inter">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Standardized Header */}
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent tracking-tight">
+            Dashboard Overview
+          </h1>
+          <p className="text-sm text-gray-500 font-medium">
+            Welcome back! Here's a snapshot of your marketplace performance.
+          </p>
+        </div>
+
         {/* Deals Carousel */}
         <DealsCarousel />
 
-        {/* Stats Cards — Total Posts, Pending Approval, Total Sales, Active Crops */}
+        {/* Stats Cards */}
         <StatsCard stats={stats} loading={loading} />
 
         {/* Charts and Activity */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <AnalyticsChart monthlyData={stats?.monthlyData} loading={loading} />
+            <EarningsChart />
           </div>
           <div className="lg:col-span-1">
             <RecentActivity activities={stats?.recentActivity} loading={loading} />

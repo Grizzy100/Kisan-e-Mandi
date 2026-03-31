@@ -160,17 +160,16 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  MdAdd, MdClose, MdImage, MdPerson, MdLocationOn,
-  MdDescription, MdTrendingUp, MdGroup, MdFavorite,
-  MdVideoLibrary, MdPerson2,
+  MdAdd, MdClose, MdImage, MdGroup, MdTrendingUp, MdFavorite,
+  MdPerson, MdVideoLibrary, MdPostAdd,
 } from "react-icons/md";
+import { motion, AnimatePresence } from "framer-motion";
 import { FarmerPost } from "./FarmerPost";
+import EmptyState from "./EmptyState";
 import { getAllPosts, getMyPosts, createPost } from "../../api/postAPI";
 import axiosInstance from "../../api/axios.js";
 
-const currentUserId = JSON.parse(localStorage.getItem("user") || "{}")?._id;
 const Community = () => {
-
   const [showModal, setShowModal] = useState(false);
   const [posts, setPosts] = useState([]);
   const [myPosts, setMyPosts] = useState([]);
@@ -180,7 +179,6 @@ const Community = () => {
   const fetchPosts = useCallback(async () => {
     try {
       const fetched = await getAllPosts();
-      // Guard: only posts with a valid _id are safe to render
       setPosts(fetched.filter((p) => p._id));
     } catch (err) {
       console.error("Error fetching posts:", err);
@@ -207,51 +205,36 @@ const Community = () => {
     { id: "all", label: "All Posts", icon: MdGroup },
     { id: "trending", label: "Trending", icon: MdTrendingUp },
     { id: "popular", label: "Popular", icon: MdFavorite },
-    { id: "mine", label: "My Posts", icon: MdPerson2 },
+    { id: "mine", label: "My Posts", icon: MdPerson },
   ];
 
   const displayPosts = (() => {
     if (activeTab === "mine") return myPosts;
     if (activeTab === "trending") return [...posts].sort((a, b) => (b.commentsCount || 0) - (a.commentsCount || 0));
     if (activeTab === "popular") return [...posts].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
-    return posts; // "all"
+    return posts;
   })();
 
   const handleNewPost = async (formData) => {
     try {
+      // ... same backend logic ...
       let mediaUrl = "";
       let mediaType = "image";
-
       if (formData.media) {
         const isVideo = formData.media.type.startsWith("video");
         mediaType = isVideo ? "video" : "image";
-
-        // 1. Get signed credentials
         const signRes = await axiosInstance.get("/upload/sign");
         const signData = signRes.data;
-
-        // 2. Upload to Cloudinary securely
         const cloudData = new FormData();
         cloudData.append("file", formData.media);
         cloudData.append("api_key", signData.apiKey);
         cloudData.append("timestamp", signData.timestamp);
         cloudData.append("signature", signData.signature);
         cloudData.append("folder", signData.folder);
-
-        const uploadType = isVideo ? "video" : "image";
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${signData.cloudName}/${uploadType}/upload`,
-          { method: "POST", body: cloudData }
-        );
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloudName}/${isVideo ? "video" : "image"}/upload`, { method: "POST", body: cloudData });
         const uploaded = await res.json();
-        if (!uploaded.secure_url) {
-          console.error("Cloudinary upload failed:", uploaded);
-          alert("Media upload failed. Please try again.");
-          return;
-        }
         mediaUrl = uploaded.secure_url;
       }
-
       const payload = {
         name: (formData.content || "").substring(0, 60) || "Community Post",
         description: formData.content,
@@ -259,310 +242,207 @@ const Community = () => {
         mediaUrl,
         mediaType,
       };
-
-      // Backend returns { message, post } — extract the actual post
       const result = await createPost(payload);
       const newPost = result.post || result;
       if (newPost?._id) {
         setPosts((prev) => [newPost, ...prev]);
-        setMyPosts((prev) => [newPost, ...prev]); // show in My Posts tab immediately
-        setActiveTab("mine"); // switch to My Posts so farmer can see their new post
+        setMyPosts((prev) => [newPost, ...prev]);
+        setActiveTab("mine");
       }
       setShowModal(false);
     } catch (err) {
-      console.error("Error creating post:", err);
-      alert("Failed to create post. Make sure you are logged in.");
+      console.error(err);
+      alert("Failed to create post.");
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50/30 to-emerald-50/50 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-200/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-10 sm:mb-8 md:mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-5 shadow-lg">
-            <MdGroup className="w-8 h-8 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <h1 className="text-4xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
+    <div className="max-w-5xl mx-auto py-6 px-4 space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 text-center md:text-left">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             Community Hub
           </h1>
-          <p className="text-gray-600 text-lg sm:text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-6 sm:mb-4">
-            Connect with fellow farmers, share your journey, and grow together.
-          </p>
+          <p className="text-gray-500 text-sm max-w-md mx-auto md:mx-0">Connect with fellow farmers, share your harvest stories, and grow together.</p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-sm font-semibold transition-all shadow-md active:scale-95 w-full md:w-auto"
+        >
+          <MdAdd className="w-5 h-5" />
+          <span>New Post</span>
+        </button>
+      </div>
 
-          {/* Tabs */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 sm:px-3 sm:py-1 rounded-2xl font-medium text-sm sm:text-xs transition-all duration-300 ${activeTab === tab.id
-                  ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md scale-105"
-                  : "bg-white/80 text-gray-700 hover:bg-white hover:shadow-sm border border-white/20"
-                  }`}
-              >
-                <tab.icon className="w-4 h-4 sm:w-3 sm:h-3" />
-                {tab.label}
-                {tab.id === "mine" && myPosts.length > 0 && (
-                  <span className="ml-0.5 bg-green-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                    {myPosts.length}
-                  </span>
-                )}
-              </button>
+      {/* Unified Pill Tabs */}
+      <div className="flex justify-start sm:justify-center mb-8 overflow-x-auto no-scrollbar pb-2 pt-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex p-1.5 bg-gray-100/50 backdrop-blur-md rounded-sm border border-gray-200/50 shadow-inner flex-nowrap whitespace-nowrap">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2.5 px-6 py-2.5 rounded-sm text-sm font-bold transition-all duration-300 relative ${activeTab === tab.id
+                ? "bg-white text-green-700 shadow-md"
+                : "text-gray-500"
+                }`}
+            >
+              <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? "text-green-600" : "text-gray-400"}`} />
+              <span className="relative z-10">{tab.label}</span>
+              {tab.id === "mine" && myPosts.length > 0 && (
+                <span className="relative z-10 ml-1 bg-green-100 text-green-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                  {myPosts.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="min-h-[400px]">
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 border-4 border-green-100 border-t-green-600 rounded-full animate-spin" />
+          </div>
+        ) : displayPosts.length === 0 ? (
+          <EmptyState
+            icon={MdPostAdd}
+            title={activeTab === "mine" ? "No posts yet" : "Be the first to post"}
+            description={activeTab === "mine" ? "Share your first farming story with the community!" : "Join the conversation and inspire others with your farming journey."}
+            action={{ label: "Create a Post", onClick: () => setShowModal(true) }}
+          />
+        ) : (
+          <div className="grid gap-6">
+            {displayPosts.map((post) => (
+              <FarmerPost key={post._id} post={post} />
             ))}
           </div>
-        </div>
-
-        {/* Content Section */}
-        <div className="mb-32">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="relative">
-                <div className="w-16 h-16 border-4 border-green-200 rounded-full animate-spin"></div>
-                <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-              </div>
-              <p className="text-gray-600 font-semibold mt-6 text-lg">Loading community posts...</p>
-              <p className="text-gray-500 text-sm mt-2">Gathering the latest from our community</p>
-            </div>
-          ) : displayPosts.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="relative inline-flex items-center justify-center w-32 h-32 mb-8">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full animate-pulse"></div>
-                <div className="relative w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-2xl">
-                  <MdDescription className="w-12 h-12 text-white" />
-                </div>
-              </div>
-              <h3 className="text-2xl sm:text-xl font-bold text-gray-800 mb-4">
-                {activeTab === "mine" ? "You haven't posted yet" : "Start the Conversation"}
-              </h3>
-              <p className="text-gray-600 text-base sm:text-sm mb-8 max-w-md mx-auto">
-                {activeTab === "mine"
-                  ? "Share your farming journey — your posts will appear here."
-                  : "Be the first to share your farming journey and inspire others!"}
-              </p>
-              <button
-                onClick={() => setShowModal(true)}
-                className="group px-8 py-3 text-sm sm:text-xs bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:scale-105 active:scale-95"
-              >
-                <span className="flex items-center gap-2">
-                  <MdAdd className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                  Create Your First Post
-                </span>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              <div className="grid gap-6 sm:gap-4">
-                {displayPosts.map((post, index) => (
-                  <div
-                    key={post._id}
-                    className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <FarmerPost post={post} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 group z-50">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-3xl animate-ping opacity-20"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-3xl animate-pulse opacity-30"></div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="relative w-14 h-14 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-3xl flex items-center justify-center shadow-xl hover:scale-110 transition-transform duration-300"
-          >
-            <MdAdd className="w-7 h-7 group-hover:rotate-180 transition-transform duration-300" />
-          </button>
-        </div>
-        <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition duration-300">
-          <div className="bg-gray-900 text-white text-xs px-3 py-1.5 rounded-md shadow-md">
-            Share Your Story
-          </div>
-        </div>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in-0 duration-300">
-          <div className="bg-white/95 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[95vh] overflow-hidden border border-white/20">
-            <div className="sticky top-0 bg-white/90 backdrop-blur-xl border-b border-gray-100/50 px-6 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  Share Your Story
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">Connect with the farming community</p>
+      {/* Modal - Aligned with modern design */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.98, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 20 }}
+              className="relative bg-white rounded-sm shadow-2xl w-full max-w-xl max-h-[90vh] overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-gray-50">
+                <h2 className="text-xl font-bold text-gray-800">New Community Post</h2>
+                <button onClick={() => setShowModal(false)} className="p-2 rounded-sm transition-colors">
+                  <MdClose className="w-5 h-5 text-gray-400" />
+                </button>
               </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-2xl flex items-center justify-center transition duration-200"
-              >
-                <MdClose className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(95vh-120px)]">
-              <PostForm onSubmit={handleNewPost} onCancel={() => setShowModal(false)} />
-            </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <PostForm onSubmit={handleNewPost} onCancel={() => setShowModal(false)} />
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-
-
-
 const PostForm = ({ onSubmit, onCancel }) => {
-  const [form, setForm] = useState({
-    content: "", location: "", media: null,
-  });
+  const [form, setForm] = useState({ content: "", location: "", media: null });
   const [mediaPreview, setMediaPreview] = useState(null);
-  const [mediaIsVideo, setMediaIsVideo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "media" && files?.[0]) handleMediaUpload(files[0]);
-    else setForm({ ...form, [name]: value });
-  };
-
-  const handleMediaUpload = (file) => {
-    const isVideo = file.type.startsWith("video");
-    setMediaIsVideo(isVideo);
+  const handleMedia = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
     setForm({ ...form, media: file });
-    if (isVideo) {
-      setMediaPreview(URL.createObjectURL(file));
-    } else {
-      const reader = new FileReader();
-      reader.onload = (e) => setMediaPreview(e.target.result);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(e.type === "dragenter" || e.type === "dragover");
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files?.[0]) handleMediaUpload(e.dataTransfer.files[0]);
-  };
-
-  const removeMedia = () => {
-    setForm({ ...form, media: null });
-    setMediaPreview(null);
-    setMediaIsVideo(false);
+    const reader = new FileReader();
+    reader.onload = (ev) => setMediaPreview(ev.target.result);
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.content) return;
+    if (!form.content.trim()) return;
     setIsSubmitting(true);
     await onSubmit(form);
     setIsSubmitting(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-4">
-      {/* Media Upload */}
-      <div className="space-y-3">
-        <label htmlFor="media" className="text-base sm:text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <MdImage className="text-green-600" />
-          Add Photo or Video
-        </label>
-        {mediaPreview ? (
-          <div className="relative group">
-            {mediaIsVideo ? (
-              <video src={mediaPreview} controls className="w-full h-52 object-cover rounded-xl border bg-black" />
-            ) : (
-              <img src={mediaPreview} alt="Preview" className="w-full h-52 object-cover rounded-xl border" />
-            )}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center">
-              <button type="button" onClick={removeMedia} className="w-10 h-10 bg-red-500 text-white rounded-xl hover:bg-red-600 flex items-center justify-center">
-                <MdClose className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`border-2 border-dashed rounded-xl p-6 text-center transition ${dragActive ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-400"}`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            <label htmlFor="media" className="cursor-pointer block text-sm sm:text-xs text-gray-600">
-              <div className="flex justify-center gap-3 mb-2">
-                <MdImage className="text-green-500 w-6 h-6" />
-                <MdVideoLibrary className="text-blue-500 w-6 h-6" />
-              </div>
-              <span className="text-green-600 font-medium">Click to upload</span> or drag &amp; drop
-              <input type="file" id="media" name="media" accept="image/*,video/mp4,video/webm,video/mov" onChange={handleChange} className="hidden" />
-              <p className="text-xs text-gray-400 mt-2">PNG, JPG, GIF, MP4, WebM (max 50MB)</p>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <label className="text-sm font-bold text-gray-700">Tell your story</label>
+        <textarea
+          required
+          rows={5}
+          value={form.content}
+          onChange={(e) => setForm({ ...form, content: e.target.value })}
+          placeholder="What's happening on your farm? Ask for advice or share a victory..."
+          className="w-full px-4 py-3 rounded-sm border border-gray-200 focus:ring-2 focus:ring-green-100 focus:border-green-600 outline-none transition-all text-sm resize-none"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700">Location (Optional)</label>
+          <input
+            type="text"
+            value={form.location}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            placeholder="e.g. Nashik, MH"
+            className="w-full px-4 py-2.5 rounded-sm border border-gray-200 focus:ring-2 focus:ring-green-100 outline-none transition-all text-sm"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700">Media</label>
+          <div className="relative">
+            <input type="file" id="post-media" className="hidden" accept="image/*,video/*" onChange={handleMedia} />
+            <label htmlFor="post-media" className="flex items-center gap-2 px-4 py-2.5 rounded-sm border border-gray-200 cursor-pointer transition-colors text-sm text-gray-600">
+              <MdImage className="w-5 h-5 text-emerald-600" />
+              <span>{form.media ? "Change media" : "Add photo/video"}</span>
             </label>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Location */}
-      <div>
-        <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-          <MdLocationOn className="inline text-green-600 mr-1" />
-          Location
-        </label>
-        <input
-          id="location" name="location" type="text" value={form.location}
-          onChange={handleChange} placeholder="City, State"
-          className="w-full px-4 py-2 sm:py-1.5 border rounded-lg text-sm sm:text-xs"
-        />
-      </div>
+      {mediaPreview && (
+        <div className="relative rounded-sm overflow-hidden border border-gray-100 bg-gray-50 aspect-video flex items-center justify-center">
+          <img src={mediaPreview} alt="Preview" className="max-h-full object-contain" />
+          <button 
+            type="button" 
+            onClick={() => { setMediaPreview(null); setForm({...form, media: null}); }}
+            className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-sm backdrop-blur-sm transition-colors"
+          >
+            <MdClose className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
-      {/* Content */}
-      <div>
-        <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-          <MdDescription className="inline text-green-600 mr-1" />
-          Share Your Thoughts
-        </label>
-        <textarea
-          id="content" name="content" rows={4} maxLength={1000}
-          value={form.content} onChange={handleChange}
-          placeholder="Share your farming experience, ask a question, or inspire others..."
-          className="w-full px-4 py-2 sm:py-1.5 border rounded-lg text-sm sm:text-xs resize-none"
-          required
-        />
-        <div className="text-right text-xs text-gray-500 mt-1">{form.content.length}/1000</div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
-        <button type="button" onClick={onCancel} className="px-6 py-2 sm:px-4 sm:py-1.5 text-sm sm:text-xs border rounded-lg text-gray-700 hover:bg-gray-100">
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-sm font-bold text-gray-500 transition-colors">
           Cancel
         </button>
-        <button type="submit" disabled={isSubmitting} className="px-8 py-2 sm:px-5 sm:py-1.5 text-sm sm:text-xs bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:scale-105 transition disabled:opacity-50">
+        <button 
+          type="submit" 
+          disabled={isSubmitting || !form.content.trim()}
+          className="flex-[2] py-3 bg-green-600 text-white rounded-sm font-bold transition-all disabled:opacity-50"
+        >
           {isSubmitting ? "Publishing..." : "Publish Post"}
         </button>
       </div>
     </form>
   );
 };
+
 export default Community;
 
 
