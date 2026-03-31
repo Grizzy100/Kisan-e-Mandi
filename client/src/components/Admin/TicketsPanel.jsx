@@ -44,7 +44,7 @@ export default function TicketsPanel() {
         setProcessing(ticketId);
         try {
             await axiosInstance.patch(`/support/${ticketId}/status`, { status, itemId });
-            toast.success(`Ticket ${status === "resolved" ? "approved ✅" : "rejected ❌"}`);
+            toast.success(`Ticket ${status === "resolved" ? "approved " : "rejected "}`);
             fetchTickets();
         } catch (err) {
             toast.error(err.response?.data?.message || "Action failed");
@@ -121,38 +121,48 @@ export default function TicketsPanel() {
                                     )}
 
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex flex-wrap items-start gap-2 mb-1.5">
-                                            <h3 className="text-white font-semibold text-sm truncate">{ticket.subject}</h3>
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${STATUS_COLORS[ticket.status]}`}>
+                                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm border uppercase tracking-wider ${STATUS_COLORS[ticket.status]}`}>
                                                 {STATUS_LABELS[ticket.status] || ticket.status}
                                             </span>
+                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-sm bg-gray-700/50 text-gray-300 border border-gray-600 uppercase tracking-wider">
+                                                {ticket.category}
+                                            </span>
                                         </div>
-                                        <p className="text-gray-400 text-xs mb-2 line-clamp-2">{ticket.description}</p>
-                                        <div className="flex flex-wrap gap-3 text-[11px] text-gray-500">
-                                            <span>📧 {ticket.email}</span>
-                                            <span>💰 ₹{ticket.price}</span>
-                                            <span>🏷 {ticket.category}</span>
+                                        <h3 className="text-white font-bold text-base mb-1 truncate">{ticket.subject}</h3>
+                                        <p className="text-gray-400 text-xs mb-4 line-clamp-2 leading-relaxed">{ticket.description}</p>
+                                        
+                                        <div className="flex flex-wrap items-center gap-4 py-3 border-t border-gray-700/50">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em]">Asking Price</span>
+                                                <span className="text-sm font-bold text-emerald-400">₹{ticket.price?.toLocaleString("en-IN")}</span>
+                                            </div>
+                                            <div className="w-px h-6 bg-gray-700/50 hidden sm:block" />
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em]">Farmer Email</span>
+                                                <span className="text-xs font-medium text-gray-300">{ticket.email}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Actions */}
                                     {ticket.status === "open" && (
-                                        <div className="flex sm:flex-col gap-2 flex-shrink-0">
+                                        <div className="flex sm:flex-col gap-2 flex-shrink-0 pt-2 sm:pt-0">
                                             <button
                                                 onClick={() => handleAction(ticket._id, "resolved", ticket.itemId)}
                                                 disabled={processing === ticket._id}
-                                                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition disabled:opacity-50"
+                                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800/30 text-white text-xs font-bold rounded-sm transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
                                             >
                                                 <MdCheckCircle className="w-4 h-4" />
-                                                {processing === ticket._id ? "…" : "Approve"}
+                                                {processing === ticket._id ? "Processing..." : "Approve Listing"}
                                             </button>
                                             <button
                                                 onClick={() => handleAction(ticket._id, "rejected", ticket.itemId)}
                                                 disabled={processing === ticket._id}
-                                                className="flex items-center gap-1.5 px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs font-semibold rounded-xl border border-red-500/20 transition disabled:opacity-50"
+                                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-red-900/20 text-gray-400 hover:text-red-400 text-xs font-bold rounded-sm border border-gray-700 hover:border-red-800/30 transition-all active:scale-95"
                                             >
                                                 <MdCancel className="w-4 h-4" />
-                                                Reject
+                                                Reject Submission
                                             </button>
                                         </div>
                                     )}

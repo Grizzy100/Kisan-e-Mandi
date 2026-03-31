@@ -68,28 +68,43 @@ const MyTickets = () => {
                                 <span className={`text-xs px-2.5 py-0.5 rounded-sm font-medium ${STATUS_STYLES[ticket.status]}`}>
                                     {STATUS_LABEL[ticket.status]}
                                 </span>
-                                <span className="text-xs px-2.5 py-0.5 rounded-sm bg-gray-100 text-gray-600 capitalize">
+                                <span className="text-[10px] px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold uppercase tracking-tighter">
                                     {ticket.category}
                                 </span>
+                                {ticket.price && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-sm bg-amber-50 text-amber-700 border border-amber-100 font-bold uppercase tracking-tighter">
+                                        ₹{ticket.price.toLocaleString("en-IN")}
+                                    </span>
+                                )}
                             </div>
-                            <p className="font-semibold text-gray-800 text-sm truncate">{ticket.subject}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                                {new Date(ticket.createdAt).toLocaleDateString("en-IN", {
+                            <p className="font-bold text-gray-800 text-sm truncate">{ticket.subject}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase">
+                                Raised on {new Date(ticket.createdAt).toLocaleDateString("en-IN", {
                                     day: "numeric", month: "short", year: "numeric",
                                 })}
                             </p>
                         </div>
-                        <span className="text-gray-400 text-lg mt-1">
+                        <span className="text-gray-400 text-lg mt-1 group-hover:text-gray-600 transition-colors">
                             {expanded === ticket._id ? "▲" : "▼"}
                         </span>
                     </button>
 
                     {/* Expanded Details */}
                     {expanded === ticket._id && (
-                        <div className="border-t border-gray-100 px-5 py-4 space-y-3">
+                        <div className="border-t border-gray-100 px-5 py-5 space-y-5 bg-gray-50/30">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category</p>
+                                    <p className="text-xs font-semibold text-gray-700">{ticket.category}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Asking Price</p>
+                                    <p className="text-xs font-semibold text-emerald-700">₹{ticket.price?.toLocaleString("en-IN") || "N/A"}</p>
+                                </div>
+                            </div>
                             <div>
-                                <p className="text-xs text-gray-400 mb-1">Description</p>
-                                <p className="text-sm text-gray-700 whitespace-pre-line">{ticket.description}</p>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Specifications</p>
+                                <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{ticket.description}</p>
                             </div>
                             {ticket.imageUrl && (
                                 <div>

@@ -5,11 +5,13 @@ import { MdImage, MdVideoLibrary, MdClose, MdCloudUpload, MdCheckCircle } from "
 import axiosInstance from "../../api/axios.js";
 
 const CATEGORIES = [
-  { value: "Wheat", label: "Wheat", icon: "🌾" },
-  { value: "Rice", label: "Rice", icon: "🍚" },
+  { value: "Cereals", label: "Cereals", icon: "🌾" },
+  { value: "Pulses", label: "Pulses", icon: "🫘" },
+  { value: "Spices", label: "Spices", icon: "🌶️" },
+  { value: "Oilseeds", label: "Oilseeds", icon: "🌻" },
   { value: "Vegetables", label: "Vegetables", icon: "🥦" },
   { value: "Fruits", label: "Fruits", icon: "🍎" },
-  { value: "Other", label: "Other Crop", icon: "🪴" },
+  { value: "Other", label: "Other", icon: "🪴" },
 ];
 
 const RaiseTicketForm = ({ onTicketRaised }) => {
@@ -93,6 +95,15 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
         mediaType,
       });
 
+      // Responsive Success Toast
+      toast.success("request raised", {
+        position: "bottom-right",
+        autoClose: 3000,
+        className: "bg-green-600 text-white rounded-sm",
+        bodyClassName: "text-[10px] md:text-xs lg:text-sm font-bold uppercase tracking-wider",
+        icon: <MdCheckCircle className="text-white w-5 h-5" />
+      });
+
       setSuccess({ ticketId: result.ticket._id });
       if (onTicketRaised) onTicketRaised();
     } catch (error) {
@@ -142,20 +153,20 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
         {/* Category Pick */}
         <div className="space-y-3">
           <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Choose Category</label>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.value}
                 type="button"
                 onClick={() => setFormData((p) => ({ ...p, category: cat.value }))}
-                className={`flex flex-col items-center justify-center p-4 rounded-sm border transition-all ${
+                className={`flex flex-col items-center justify-center p-3 rounded-sm border transition-all ${
                   formData.category === cat.value
                   ? "border-emerald-500 bg-emerald-50/30 text-emerald-700 ring-1 ring-emerald-500 shadow-sm"
                   : "border-gray-100 bg-white text-gray-400 grayscale hover:grayscale-0 hover:border-gray-200"
                 }`}
               >
-                <span className="text-2xl mb-2">{cat.icon}</span>
-                <span className="text-[10px] font-bold uppercase">{cat.label}</span>
+                <span className="text-xl mb-1.5">{cat.icon}</span>
+                <span className="text-[9px] font-bold uppercase text-center">{cat.label}</span>
               </button>
             ))}
           </div>
@@ -213,19 +224,21 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
         <div className="space-y-3">
           <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Quality Verification Media</label>
           {mediaPreview ? (
-            <div className="relative rounded-sm overflow-hidden border border-gray-200 group">
+            <div className="relative w-full sm:w-64 h-48 rounded-sm overflow-hidden border border-gray-200 group bg-gray-50">
               {mediaIsVideo ? (
-                <video src={mediaPreview} controls className="w-full max-h-[350px] bg-black" />
+                <video src={mediaPreview} controls className="w-full h-full object-contain bg-black" />
               ) : (
-                <img src={mediaPreview} alt="Preview" className="w-full max-h-[350px] object-cover" />
+                <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
               )}
-              <button 
-                type="button" 
-                onClick={removeMedia} 
-                className="absolute top-4 right-4 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-sm flex items-center justify-center hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"
-              >
-                <MdClose className="w-5 h-5" />
-              </button>
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button 
+                  type="button" 
+                  onClick={removeMedia} 
+                  className="w-10 h-10 bg-white text-gray-900 rounded-sm flex items-center justify-center hover:bg-red-500 hover:text-white transition-all transform scale-90 group-hover:scale-100"
+                >
+                  <MdClose className="w-6 h-6" />
+                </button>
+              </div>
             </div>
           ) : (
             <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/20 rounded-sm p-10 cursor-pointer transition-all group">

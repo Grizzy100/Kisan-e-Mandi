@@ -121,18 +121,18 @@ export function AppSidebar({
             if (isMobile) setIsOpen(false);
           }}
           className={`flex items-center justify-between px-4 py-2.5 rounded-sm w-full text-sm transition-all duration-200 group ${isActive
-            ? "bg-gray-900 text-white shadow-sm"
-            : "text-gray-500 hover:bg-gray-50 hover:text-green-700"
+            ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/20"
+            : "text-gray-500 hover:bg-emerald-50 hover:text-emerald-700"
             }`}
         >
           <div className="flex items-center gap-3">
-            <item.icon className={`w-5 h-5 transition-colors ${isActive ? "text-white" : "text-gray-400 group-hover:text-green-600"}`} />
-            <span className={`font-bold tracking-tight transition-colors ${isActive ? "text-white" : "text-gray-600 group-hover:text-green-700"}`}>
+            <item.icon className={`w-5 h-5 transition-colors ${isActive ? "text-white" : "text-gray-400 group-hover:text-emerald-600"}`} />
+            <span className={`font-bold tracking-tight transition-colors ${isActive ? "text-white" : "text-gray-600 group-hover:text-emerald-700"}`}>
               {item.title}
             </span>
           </div>
           {item.badge && (
-            <span className={`text-[10px] px-2 py-0.5 rounded-sm font-black ${isActive ? "bg-white/20 text-white" : "bg-green-100 text-green-700"}`}>
+            <span className={`text-[10px] px-2 py-0.5 rounded-sm font-black ${isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"}`}>
               {item.badge}
             </span>
           )}

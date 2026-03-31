@@ -12,7 +12,7 @@ import { AnimatePresence, motion } from "framer-motion";
 // Panels map
 const PANELS = {
     analytics: AdminAnalytics,
-    tickets: TicketsPanel,
+    approvals: TicketsPanel,
     vendors: VendorsPanel,
     customers: CustomersPanel,
     problems: ProblemsPanel,

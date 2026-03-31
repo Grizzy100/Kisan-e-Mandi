@@ -56,23 +56,6 @@ const MainDashboard = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      wrapper: contentRef.current,
-      content: contentRef.current,
-      smooth: true,
-      smoothTouch: false,
-    });
-    const raf = (time) => {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    };
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   const handleSectionChange = (section) => {
     setCurrentSection(section);
     navigate(`/dashboard/${section === "dashboard" ? "" : section}`);

@@ -13,7 +13,7 @@ const supportTicketSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["Wheat", "Rice", "Vegetables", "Fruits", "Other"],
+      enum: ["Pulses", "Spices", "Oilseeds", "Cereals", "Vegetables", "Fruits", "Other", "Wheat", "Rice"],
       required: true,
     },
     subject: {

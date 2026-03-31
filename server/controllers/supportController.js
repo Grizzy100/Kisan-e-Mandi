@@ -51,9 +51,10 @@ export const createSupportTicket = async (req, res) => {
     // Map Category to CropType for Item schema
     const mapCategoryToCropType = (cat) => {
       const c = cat.toLowerCase();
-      if (c === "wheat" || c === "rice") return "grain";
+      if (c === "cereals" || c === "pulses" || c === "grain") return "grain";
       if (c === "vegetables") return "vegetable";
       if (c === "fruits") return "fruit";
+      if (c === "oilseeds" || c === "spices") return "other";
       return "other";
     };
 
