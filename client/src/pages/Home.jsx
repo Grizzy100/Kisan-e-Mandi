@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Lenis from "lenis";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Services from "../components/Services";
@@ -11,6 +12,13 @@ const Home = () => {
   const [hasPassedHero, setHasPassedHero] = useState(false);
 
   useEffect(() => {
+    const lenis = new Lenis();
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         setHasPassedHero(!entry.isIntersecting);
@@ -25,6 +33,7 @@ const Home = () => {
     }
 
     return () => {
+      lenis.destroy();
       if (heroRef.current) {
         observer.unobserve(heroRef.current);
       }

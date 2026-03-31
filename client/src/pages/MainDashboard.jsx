@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import Lenis from "@studio-freight/lenis";
+
 
 import { AppSidebar } from "../components/Dashboard/AppSidebar";
 import DashboardHeader from "../components/Dashboard/DashboardHeader";
@@ -39,7 +39,7 @@ const MainDashboard = () => {
     if (last && last !== "dashboard" && !last.match(/^[0-9a-fA-F]{24}$/)) {
       setCurrentSection(last);
     } else if (location.pathname.includes("/track/")) {
-        setCurrentSection("orders"); // Keep orders highlighted when tracking
+      setCurrentSection("orders"); // Keep orders highlighted when tracking
     } else {
       setCurrentSection("dashboard");
     }

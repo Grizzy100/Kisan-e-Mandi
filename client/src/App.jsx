@@ -13,7 +13,7 @@ import VerifyOTP from "./pages/VerifyOTP.jsx";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar.jsx";
-import Lenis from "@studio-freight/lenis";
+
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
