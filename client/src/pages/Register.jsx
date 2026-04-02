@@ -77,6 +77,18 @@ const Register = () => {
         }
     };
 
+    const postWithSingleRetry = async (endpoint, body) => {
+        const firstTry = await post(endpoint, body);
+        if (firstTry.ok) return firstTry;
+
+        const msg = (firstTry.data?.message || "").toLowerCase();
+        const shouldRetry = msg.includes("network") || msg.includes("timeout");
+        if (!shouldRetry) return firstTry;
+
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        return post(endpoint, body);
+    };
+
     const checkAvailability = async (type, value) => {
         const setter = type === "email" ? setEmailTaken : setPhoneTaken;
         setter("checking");
@@ -201,7 +213,7 @@ const Register = () => {
 
     const handleGoogleSuccess = async (credentialResponse) => {
         setLoading(true);
-        const { ok, data } = await post("google", {
+        const { ok, data } = await postWithSingleRetry("google", {
             credential: credentialResponse.credential,
             role,
         });
@@ -213,7 +225,7 @@ const Register = () => {
             toast.success("Google sign-in successful");
             redirectByRole(data.user, navigate);
         } else {
-            toast.error("Google login failed");
+            toast.error(data.message || "Google login failed. Please try again.");
         }
     };
 

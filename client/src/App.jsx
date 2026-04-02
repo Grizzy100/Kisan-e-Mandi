@@ -63,29 +63,23 @@ const PrivateRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem("token");
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
-  console.log(`[PrivateRoute] Checking access to: ${location.pathname}. isAdminRoute: ${isAdminRoute}`, { userStr: !!userStr, token: !!token, allowedRoles });
 
   if (!userStr || !token) {
-    console.log(`[PrivateRoute] Missing auth. Redirecting to: ${isAdminRoute ? "/admin/login" : "/login"}`);
     // Send admin-route visitors to the admin login page
     return <Navigate to={isAdminRoute ? "/admin/login" : "/login"} replace />;
   }
 
   try {
     const user = JSON.parse(userStr);
-    console.log(`[PrivateRoute] User role: ${user.role}. Allowed:`, allowedRoles);
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-      console.log(`[PrivateRoute] Access denied for role ${user.role}. Redirecting...`);
       // Admin tried to access non-admin route → their dashboard
       if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
       return <Navigate to="/dashboard" replace />;
     }
   } catch (e) {
-    console.log(`[PrivateRoute] JSON Parse Error. Redirecting to ${isAdminRoute ? "/admin/login" : "/login"}`);
     return <Navigate to={isAdminRoute ? "/admin/login" : "/login"} replace />;
   }
 
-  console.log(`[PrivateRoute] Access GRANTED to ${location.pathname}`);
   return children;
 };
 
