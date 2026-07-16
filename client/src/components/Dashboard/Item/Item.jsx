@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FilterSidebar } from './FilterSidebar';
 import { ProductCard } from './ProductCard';
 import { getItems } from '../../../api/itemAPI';
 import OrderModal from './OrderModal';
 import { MdFilterList, MdSearch, MdClose } from 'react-icons/md';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCart } from '../../../context/CartContext';
 
 const formatItem = (item, fallbackUser) => ({
   id: item._id,
@@ -13,6 +14,7 @@ const formatItem = (item, fallbackUser) => ({
   price: item.price,
   unit: item.unit,
   quantity: item.quantity,
+  minOrderQuantity: item.minOrderQuantity || 1,
   image: item.mediaUrl || item.imageUrl || 'https://placehold.co/400x400?text=No+Photo',
   mediaType: item.mediaType || 'image',
   category: item.cropType,
@@ -22,6 +24,7 @@ const formatItem = (item, fallbackUser) => ({
   location: item.location || '',
   sellerName: item.sellerId?.name || fallbackUser?.name || 'Farmer',
   sellerAvatar: item.sellerId?.avatar || fallbackUser?.avatar || '',
+  sellerId: item.sellerId?._id || item.sellerId || fallbackUser?._id,
 });
 
 const Item = () => {
@@ -75,23 +78,30 @@ const Item = () => {
     setProducts(allProducts.filter((p) => selectedCategories.includes(p.category)));
   }, [allProducts, selectedCategories]);
 
-  const handleCategoryChange = (id) => {
+  const handleCategoryChange = useCallback((id) => {
     setSelectedCategories((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
-  };
+  }, []);
 
-  const handlePriceChange = (type, value) => {
+  const handlePriceChange = useCallback((type, value) => {
     if (type === 'min') setMinPrice(value);
     else setMaxPrice(value);
-  };
+  }, []);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setSelectedCategories([]);
     setSearch('');
     setMinPrice('');
     setMaxPrice('');
-  };
+  }, []);
+
+  const { addToCart, cartItems } = useCart();
+  const handleAddToCart = useCallback((p) => {
+    addToCart(p);
+  }, [addToCart]);
+  
+  const handleCloseSidebar = useCallback(() => setIsSidebarOpen(false), []);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50/50">
@@ -105,7 +115,7 @@ const Item = () => {
         onPriceChange={handlePriceChange}
         onClearFilters={handleClearFilters}
         isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
+        onClose={handleCloseSidebar}
       />
 
       <div className="flex-1 w-full max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-8">
@@ -189,14 +199,20 @@ const Item = () => {
                     className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"
                 >
                     <AnimatePresence mode="popLayout">
-                        {products.map((product) => (
-                            <ProductCard
-                                key={product.id}
-                                product={product}
-                                mode="browse"
-                                onAddToCart={isCustomer ? (p) => setOrderProduct(p) : undefined}
-                            />
-                        ))}
+                        {products.map((product) => {
+                            const cartItem = cartItems?.find(item => item.id === product.id);
+                            const inCart = !!cartItem;
+                            return (
+                              <ProductCard
+                                  key={product.id}
+                                  product={product}
+                                  mode="browse"
+                                  inCart={inCart}
+                                  cartQuantity={cartItem?.cartQuantity}
+                                  onAddToCart={isCustomer ? handleAddToCart : undefined}
+                              />
+                            );
+                        })}
                     </AnimatePresence>
                 </motion.div>
             )}

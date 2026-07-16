@@ -1,3 +1,4 @@
+//server\middleware\validateRequest.js
 import { body, validationResult } from "express-validator";
 
 /**
@@ -60,3 +61,8 @@ export const validateSupportTicket = [
 //   handleValidationErrors,
 // ];
 
+
+
+// This acts as validator/ folder. We have used express-validator instead of zod and all.
+// This is used to validate the request and response but for 
+// POST and SUPPORT TICKET

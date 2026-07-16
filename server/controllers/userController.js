@@ -1,6 +1,8 @@
+//server\controllers\userController.js
 import User from "../models/User.js";
 import Item from "../models/Item.js";
 import SupportTicket from "../models/SupportTicket.js";
+import { assertItemTransition } from "../utils/itemStateMachine.js";
 
 /**
  * Get current logged-in user profile
@@ -128,3 +130,17 @@ export const getAdminStats = async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 };
+
+// its work is to count users, farmers, custemors and all
+// it helps in the dashboard of Admin for stats
+// Pending tickets , published items
+
+// When building the Admin dashboard, 
+// I needed to run 6 different count queries on the database. 
+// If I awaited them one by one sequentially, it would cause a waterfall delay, 
+// making the dashboard load slowly. 
+// Instead, I wrapped all 6 queries in a Promise.all(). 
+// This executes all database counts in parallel (concurrently), making the API response up to 6 times faster and drastically 
+// improving the Admin's user experience.
+
+

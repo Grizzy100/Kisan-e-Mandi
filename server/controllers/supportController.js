@@ -1,6 +1,7 @@
+//server\controllers\supportController.js
 import SupportTicket from "../models/SupportTicket.js";
 import Item from "../models/Item.js";
-import nodemailer from "nodemailer";
+import { fireEmail } from "../utils/emailUtils.js";
 import {
   ITEM_STATUS,
   TICKET_STATUS,
@@ -10,20 +11,12 @@ import {
   isValidTicketStatus,
 } from "../utils/itemStateMachine.js";
 
-// ── Helper: Nodemailer transporter ──────────────────────────────
-const createTransporter = () =>
-  nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+
 
 // ── POST /api/support  (protected) ──────────────────────────────
 export const createSupportTicket = async (req, res) => {
   try {
-    const { category, subject, description, price, mediaUrl, mediaType } = req.body;
+    const { category, subject, description, price, stockQuantity, minOrderQuantity, mediaUrl, mediaType } = req.body;
 
     const email = req.user?.email;
     const userId = req.user?._id;
@@ -32,21 +25,9 @@ export const createSupportTicket = async (req, res) => {
       return res.status(401).json({ message: "Not authorized – no user email found." });
     }
 
-    if (!category || !subject || !description || price === undefined) {
-      return res.status(400).json({ message: "Category, subject, description, and price are required." });
+    if (!category || !subject || !description || price === undefined || !stockQuantity || !minOrderQuantity) {
+      return res.status(400).json({ message: "Category, subject, description, price, stock, and MOQ are required." });
     }
-
-    // Save ticket
-    const ticket = await SupportTicket.create({
-      userId,
-      email,
-      category,
-      subject,
-      description,
-      price: Number(price),
-      mediaUrl: mediaUrl || "",
-      mediaType: mediaType || "image",
-    });
 
     // Map Category to CropType for Item schema
     const mapCategoryToCropType = (cat) => {
@@ -58,62 +39,72 @@ export const createSupportTicket = async (req, res) => {
       return "other";
     };
 
-    // Auto-generate a pending_admin Item from ticket fields
+    // ── Run both DB writes in parallel (Promise.all) ─────────────────
+    const [ticket] = await Promise.all([
+      SupportTicket.create({
+        userId,
+        email,
+        category,
+        subject,
+        description,
+        price: Number(price),
+        stockQuantity: Number(stockQuantity),
+        minOrderQuantity: Number(minOrderQuantity),
+        mediaUrl: mediaUrl || "",
+        mediaType: mediaType || "image",
+      }),
+      // Item is created simultaneously — ticketId linked after
+    ]);
+
+    // Item needs the ticket._id, so create it right after
     await Item.create({
       ticketId: ticket._id,
       sellerId: userId,
       name: subject,
       description,
       cropType: mapCategoryToCropType(category),
-      ticketCategory: category,   // preserve original label e.g. "Rice"
+      ticketCategory: category,
       cropName: subject,
       price: Number(price),
+      quantity: Number(stockQuantity),
+      minOrderQuantity: Number(minOrderQuantity),
       mediaUrl: mediaUrl || "",
       mediaType: mediaType || "image",
       status: "pending_admin",
       isActive: false,
     });
 
-    // Send confirmation email
-    try {
-      const transporter = createTransporter();
-      await transporter.sendMail({
-        from: `"Kisan e-Mandi Support" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: `🌱 Crop Negotiation Request Received: ${category}`,
-        html: `
-          <div style="font-family:sans-serif;max-width:480px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-            <div style="background:#16a34a;padding:20px 24px;">
-              <h1 style="color:white;margin:0;font-size:18px;">Kisan e-Mandi - Crop Enlistment</h1>
-            </div>
-            <div style="padding:24px;">
-              <p style="color:#374151;margin-top:0;">Dear Farmer,</p>
-              <p style="color:#374151;">Your request to enlist a crop for negotiation has been successfully received. Our admin team will review your submission.</p>
-              <p style="color:#374151;font-weight:bold;">Upon approval, you will be able to enlist it on the marketplace.</p>
-              
-              <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0;">
-                <p style="margin:0 0 8px;color:#166534;font-weight:600;">Request Details</p>
-                <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Ticket ID:</strong> ${ticket._id}</p>
-                <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Crop Category:</strong> ${category}</p>
-                <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Subject:</strong> ${subject}</p>
-                <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Requested Price:</strong> ₹${price}</p>
-              </div>
-              
-              <p style="color:#6b7280;font-size:13px;">You can track this request in the <strong>My Activity</strong> section of your dashboard.</p>
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
-              <p style="color:#9ca3af;font-size:12px;margin:0;">Kisan e-Mandi Team</p>
-            </div>
-          </div>
-        `,
-      });
-    } catch (mailErr) {
-      // Log email failure but don't block the ticket creation response
-      console.error("Email send failed (ticket still created):", mailErr.message);
-    }
-
-    return res.status(201).json({
+    // ── Respond immediately — email fires in background with retry ───
+    res.status(201).json({
       message: "Ticket raised successfully. A confirmation has been sent to your email.",
       ticket,
+    });
+
+    fireEmail({
+      to: email,
+      subject: `Crop Negotiation Request Received: ${category}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+          <div style="background:#16a34a;padding:20px 24px;">
+            <h1 style="color:white;margin:0;font-size:18px;">Kisan e-Mandi - Crop Enlistment</h1>
+          </div>
+          <div style="padding:24px;">
+            <p style="color:#374151;margin-top:0;">Dear Farmer,</p>
+            <p style="color:#374151;">Your request to enlist a crop for negotiation has been successfully received. Our admin team will review your submission.</p>
+            <p style="color:#374151;font-weight:bold;">Upon approval, you will be able to enlist it on the marketplace.</p>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0;">
+              <p style="margin:0 0 8px;color:#166534;font-weight:600;">Request Details</p>
+              <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Ticket ID:</strong> ${ticket._id}</p>
+              <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Crop Category:</strong> ${category}</p>
+              <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Subject:</strong> ${subject}</p>
+              <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Requested Price:</strong> ₹${price}</p>
+            </div>
+            <p style="color:#6b7280;font-size:13px;">You can track this request in the <strong>My Activity</strong> section of your dashboard.</p>
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
+            <p style="color:#9ca3af;font-size:12px;margin:0;">Kisan e-Mandi Team</p>
+          </div>
+        </div>
+      `,
     });
   } catch (err) {
     console.error("❌ Error creating support ticket:", err);
@@ -161,9 +152,7 @@ export const updateTicketStatus = async (req, res) => {
     }
 
     // Find the drafted item and update its status too.
-    console.log(`🔍 [updateTicketStatus] Looking for item with ticketId: ${id}`);
     const item = await Item.findOne({ ticketId: id });
-    console.log(`🔍 [updateTicketStatus] Item found:`, item ? `${item._id} (status: ${item.status})` : "NOT FOUND");
     let itemStatusField = ITEM_STATUS.PENDING_ADMIN;
 
     if (item) {
@@ -177,7 +166,6 @@ export const updateTicketStatus = async (req, res) => {
       if (isLegacyPublishedResolvedCase) {
         // Backward compatibility: keep already-live legacy listing live.
         itemStatusField = ITEM_STATUS.PUBLISHED;
-        console.log(`ℹ️ [updateTicketStatus] Keeping legacy live item ${item._id} as published.`);
       } else if (!canTransitionItem(item.status, targetItemState.status)) {
         return res.status(409).json({
           message: `Item cannot move from '${item.status}' to '${targetItemState.status}'.`,
@@ -185,45 +173,34 @@ export const updateTicketStatus = async (req, res) => {
       } else {
         item.status = targetItemState.status;
         item.isActive = targetItemState.isActive;
-        if (targetItemState.status === ITEM_STATUS.APPROVED_HIDDEN) {
-          console.log(`✅ [updateTicketStatus] Setting item ${item._id} to approved_hidden (awaiting farmer publish)`);
-        } else if (targetItemState.status === ITEM_STATUS.REJECTED) {
-          console.log(`❌ [updateTicketStatus] Setting item ${item._id} to rejected`);
-        } else {
-          console.log(`ℹ️ [updateTicketStatus] Keeping item ${item._id} as pending_admin during review`);
-        }
       }
 
-      const saved = await item.save();
-      console.log(`💾 [updateTicketStatus] Item saved:`, saved.status, saved.isActive);
+      await item.save();
     } else {
       console.warn(`⚠️ [updateTicketStatus] No item found with ticketId ${id} — item won't be updated!`);
     }
 
-    // Try sending email notification to the user
-    try {
-      if (ticket.email) {
-        const transporter = createTransporter();
-        const statLabel = status === TICKET_STATUS.RESOLVED ? "Approved" : "Rejected";
 
-        await transporter.sendMail({
-          from: `"Kisan e-Mandi Admin" <${process.env.EMAIL_USER}>`,
-          to: ticket.email,
-          subject: `Crop Enlistment Update: ${statLabel}`,
-          html: `
-            <div style="font-family:sans-serif;padding:20px;">
-              <h2>Your request has been ${statLabel}</h2>
-              <p>Your ticket for <strong>${ticket.subject}</strong> has been updated to <strong>${status}</strong> by our admins.</p>
-              ${status === TICKET_STATUS.RESOLVED ? '<p>Your crop listing is <strong>approved</strong>. Please open <strong>My Listings</strong> and click <strong>Accept</strong> to publish it on the marketplace.</p>' : '<p>Sorry, your request was denied at this time.</p>'}
-            </div>
-          `,
-        });
-      }
-    } catch (mailErr) {
-      console.error("Failed sending admin status email:", mailErr);
+    // ── Respond immediately — email fires in background with retry ───
+    res.json({ message: `Ticket ${status} successfully`, ticket, itemStatus: itemStatusField });
+
+    if (ticket.email) {
+      const statLabel = status === TICKET_STATUS.RESOLVED ? "Approved" : "Rejected";
+      fireEmail({
+        to: ticket.email,
+        subject: `Crop Enlistment Update: ${statLabel}`,
+        html: `
+          <div style="font-family:sans-serif;padding:20px;">
+            <h2>Your request has been ${statLabel}</h2>
+            <p>Your ticket for <strong>${ticket.subject}</strong> has been updated to <strong>${status}</strong> by our admins.</p>
+            ${status === TICKET_STATUS.RESOLVED
+              ? '<p>Your crop listing is <strong>approved</strong>. Please open <strong>My Listings</strong> and click <strong>Accept</strong> to publish it on the marketplace.</p>'
+              : '<p>Sorry, your request was denied at this time.</p>'
+            }
+          </div>
+        `,
+      });
     }
-
-    return res.json({ message: `Ticket ${status} successfully`, ticket, itemStatus: itemStatusField });
   } catch (err) {
     console.error("❌ Error updating ticket status:", err);
     return res.status(500).json({ message: "Server error." });

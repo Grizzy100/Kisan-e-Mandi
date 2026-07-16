@@ -13,7 +13,7 @@ import User from "../models/User.js";
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error("❌  MONGO_URI not set in .env – aborting.");
+  console.error("MONGO_URI not set in .env – aborting.");
   process.exit(1);
 }
 
@@ -26,22 +26,22 @@ const run = async () => {
   const seller = await User.findOne({ role: { $in: ["vendor", "farmer", "user"] } });
 
   if (!seller) {
-    console.error("❌  No vendor/farmer user found. Register a user first.");
+    console.error("No vendor/farmer user found. Register a user first.");
     await mongoose.disconnect();
     process.exit(1);
   }
 
-  console.log(`👤  Using seller: ${seller.name} (${seller.email})`);
+  console.log(`Using seller: ${seller.name} (${seller.email})`);
 
   // Check if test item already exists
   const existing = await Item.findOne({ name: "Test Wheat Listing" });
   if (existing) {
-    console.log("ℹ️  Test item already exists:", existing._id, "status:", existing.status, "isActive:", existing.isActive);
+    console.log("Test item already exists:", existing._id, "status:", existing.status, "isActive:", existing.isActive);
     // Force it to published
     existing.status = "published";
     existing.isActive = true;
     await existing.save();
-    console.log("✅  Forced existing test item to published+active");
+    console.log("Forced existing test item to published+active");
     await mongoose.disconnect();
     return;
   }
@@ -61,14 +61,14 @@ const run = async () => {
     isActive: true,
   });
 
-  console.log("✅  Test item created:", item._id);
+  console.log("Test item created:", item._id);
   console.log("   status:", item.status, "| isActive:", item.isActive);
-  console.log("\n🎉  Visit the marketplace — this item should now appear!");
+  console.log("\n Visit the marketplace — this item should now appear!");
 
   await mongoose.disconnect();
 };
 
 run().catch((err) => {
-  console.error("❌  Error:", err);
+  console.error("Error:", err);
   process.exit(1);
 });

@@ -1,28 +1,22 @@
+//server\controllers\authController.js
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
 import admin from "../config/firebase.js";
 import crypto from "crypto";
+import { transporter } from "../utils/emailUtils.js";
 
-// ── Nodemailer ─────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 // ── JWT Helper ─────────────────────────────────────────────────
 const generateJWT = (id, role) =>
   jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
+
 // ── Email Helper ───────────────────────────────────────────────
 const sendEmail = async ({ to, subject, html }) => {
   if (!process.env.EMAIL_USER) {
-    console.warn("[Email] EMAIL_USER not set – logging to console instead:");
-    console.log({ to, subject, html });
+    console.warn("[Email] EMAIL_USER not set – logging parameters (HTML body redacted for security):");
+    console.log({ to, subject });
     return;
   }
   await transporter.sendMail({
@@ -33,10 +27,15 @@ const sendEmail = async ({ to, subject, html }) => {
   });
 };
 
+
+
 // ── Validation Helpers ────────────────────────────────────────
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const isValidPhone = (v) => /^\+[1-9]\d{7,14}$/.test(v);
 const isValidName = (v) => typeof v === "string" && v.trim().length >= 2;
+
+
+
 
 // ─────────────────────────────────────────────────────────────────
 // 0. CHECK AVAILABILITY (email or phone — real-time)
@@ -290,11 +289,24 @@ export const getMe = async (req, res) => {
   res.status(200).json({ user: req.user });
 };
 
+
+
+
+
+
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────────
 // 7. GOOGLE OAUTH LOGIN / REGISTER
 //    POST /api/auth/google
 // ─────────────────────────────────────────────────────────────────
-import { OAuth2Client } from "google-auth-library";
+import { LoginTicket, OAuth2Client } from "google-auth-library";
+import Mail from "nodemailer/lib/mailer/index.js";
+import { AuthRegistrationsCredentialListMappingContextImpl } from "twilio/lib/rest/api/v2010/account/sip/domain/authTypes/authTypeRegistrations/authRegistrationsCredentialListMapping.js";
+import router from "../routes/authRoutes.js";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const googleLogin = async (req, res) => {
@@ -349,6 +361,20 @@ export const googleLogin = async (req, res) => {
     res.status(401).json({ message: "Invalid Google credential" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─────────────────────────────────────────────────────────────────
 // 8. FORGOT PASSWORD → send reset link via email
@@ -477,7 +503,22 @@ export const resendVerification = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 // 11. ADMIN LOGIN — strictly admin-only, separate endpoint
 //     POST /api/auth/admin-login
 // ─────────────────────────────────────────────────────────────────
@@ -519,3 +560,14 @@ export const adminLogin = async (req, res) => {
     res.status(500).json({ message: "Server error during admin login" });
   }
 };
+
+
+// This file does 
+// 1) Registers user, looks for already existing email
+// 2) Logs in User using either JWT or OAuth (Google)
+// 3) resets passwords
+// 4) Resends verification email
+// 5) Separate Admin log in route
+
+// We need separate Admin authorization and authetication cause the normal user or hacker may hit the endpoiunt 
+// So for protection we use protect middleware and also a new endpoint

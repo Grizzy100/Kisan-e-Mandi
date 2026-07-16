@@ -1,3 +1,4 @@
+//server\utils\itemStateMachine.js
 // Simple canTransitionItem export for compatibility
 export function canTransitionItem(fromStatus, toStatus) {
   const allowed = ITEM_TRANSITIONS[fromStatus];
@@ -22,7 +23,7 @@ export const TICKET_STATUS = Object.freeze({
 // Transition table with explicit restock path and comments for edge cases
 const ITEM_TRANSITIONS = Object.freeze({
   [ITEM_STATUS.PENDING_ADMIN]: new Set([
-    ITEM_STATUS.APPROVED_HIDDEN,
+    ITEM_STATUS.APPROVED_HIDDEN, //NOT yet live on the marketplace
     ITEM_STATUS.REJECTED,
   ]),
   [ITEM_STATUS.APPROVED_HIDDEN]: new Set([
@@ -196,3 +197,12 @@ export const canPublishFromStatus = (status) =>
 
 export const canShelveFromStatus = (status) =>
   status === ITEM_STATUS.PUBLISHED || status === ITEM_STATUS.SOLD_OUT;
+
+
+
+//This includes
+// 1) Status of items 
+// 2) Status of ticketStatus
+// 3) What admin, consumer, farmer should be able to do
+// 4) Synchronizes Tickets and Items
+//IT DOES NOT TOUCH DATABSE

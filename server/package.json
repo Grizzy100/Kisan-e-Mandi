@@ -9,7 +9,9 @@
     "seed": "node scripts/seedAdmin.js",
     "items:audit": "node scripts/reconcileItemStates.js",
     "items:reconcile": "node scripts/reconcileItemStates.js --apply",
-    "items:sync-tickets": "node scripts/reconcileItemStates.js --apply --sync-ticket-status"
+    "items:sync-tickets": "node scripts/reconcileItemStates.js --apply --sync-ticket-status",
+    "test-email": "node scripts/testEmail.js",
+    "posts:approve-all": "node scripts/approveAllPosts.js"
   },
   "keywords": [],
   "author": "",

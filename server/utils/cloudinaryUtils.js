@@ -1,3 +1,4 @@
+//server\utils\cloudinaryUtils.js
 import { Readable } from "stream";
 import cloudinary from "../config/cloudinary.js";
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MdSearch, MdNotifications, MdShield } from "react-icons/md";
 import { ThemeToggle } from "./ThemeToggle";
+import UserAvatar from "../ui/UserAvatar";
 
 export default function AdminNavbar() {
     const [search, setSearch] = useState("");
@@ -40,11 +41,13 @@ export default function AdminNavbar() {
                             <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wide">Admin</span>
                         </div>
                     </div>
-                    <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-sm font-bold">
-                            {user.name?.[0]?.toUpperCase() || "A"}
-                        </span>
-                    </div>
+                    <UserAvatar
+                        src={user?.avatar}
+                        email={user?.email}
+                        name={user?.name}
+                        alt="Admin"
+                        className="w-9 h-9 rounded-xl text-sm font-bold flex-shrink-0"
+                    />
                 </div>
             </div>
         </header>

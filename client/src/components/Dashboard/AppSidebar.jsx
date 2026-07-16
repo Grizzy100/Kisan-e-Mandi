@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   MdDashboard,
   MdShoppingCart,
@@ -15,6 +15,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
+const sidebarVariants = {
+  desktopOpen: {
+    x: 0,
+    width: 256,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 160, damping: 22 },
+  },
+  desktopClosed: {
+    x: -12,
+    width: 0,
+    opacity: 0,
+    transition: { type: "tween", duration: 0.28, ease: "easeInOut" },
+  },
+  mobileHidden: {
+    x: "-100%",
+    width: 256,
+    transition: { type: "tween", duration: 0.3 },
+  },
+  mobileVisible: {
+    x: 0,
+    width: 256,
+    transition: { type: "tween", duration: 0.3 },
+  },
+};
+
 export function AppSidebar({
   isOpen,
   setIsOpen,
@@ -24,8 +49,11 @@ export function AppSidebar({
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "customer"; // "farmer", "customer", "admin"
+  const user = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem("user") || "{}"); }
+    catch { return {}; }
+  }, []);
+  const role = user?.role || "customer";
 
   useEffect(() => {
     const handleResize = () => {
@@ -36,20 +64,20 @@ export function AppSidebar({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const getMenuItems = () => {
-    const baseItems = [
+  const menuItems = useMemo(() => {
+    const items = [
       { title: "Dashboard", key: "dashboard", icon: MdDashboard },
     ];
 
     if (role === "admin") {
-      baseItems.push(
+      items.push(
         { title: "Platform Users", key: "users", icon: MdGroup },
         { title: "Crop Approvals", key: "admin", icon: MdAdminPanelSettings, badge: "!" }
       );
     }
 
     if (role === "farmer") {
-      baseItems.push(
+      items.push(
         { title: "My Inventory", key: "my", icon: MdPerson },
         { title: "Marketplace", key: "item", icon: MdShoppingCart },
         { title: "Help & Support", key: "help", icon: MdHelp },
@@ -58,58 +86,30 @@ export function AppSidebar({
     }
 
     if (role === "customer") {
-      baseItems.push(
+      items.push(
         { title: "Marketplace", key: "item", icon: MdShoppingCart },
         { title: "My Orders", key: "orders", icon: MdHistory }
       );
     }
 
-    // Community & Help only for farmers
     if (role === "farmer") {
-      baseItems.push({ title: "Community", key: "community", icon: MdGroup });
+      items.push({ title: "Community", key: "community", icon: MdGroup });
     }
 
-    return baseItems;
-  };
-
-  const menuItems = getMenuItems();
+    return items;
+  }, [role]);
 
   const settingsItems = [
     { title: "Settings", key: "settings", icon: MdSettings },
   ];
 
-  const sidebarVariants = {
-    desktopOpen: {
-      x: 0,
-      width: 256,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 160, damping: 22 },
-    },
-    desktopClosed: {
-      x: -12,
-      width: 0,
-      opacity: 0,
-      transition: { type: "tween", duration: 0.28, ease: "easeInOut" },
-    },
-    mobileHidden: {
-      x: "-100%",
-      width: 256,
-      transition: { type: "tween", duration: 0.3 },
-    },
-    mobileVisible: {
-      x: 0,
-      width: 256,
-      transition: { type: "tween", duration: 0.3 },
-    },
-  };
-
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     const currentRole = user?.role;
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     toast.success("Logged out successfully 👋");
     navigate(currentRole === "admin" ? "/admin/login" : "/login");
-  };
+  }, [user?.role, navigate]);
 
   const renderButton = (item) => {
     const isActive = currentSection === item.key;

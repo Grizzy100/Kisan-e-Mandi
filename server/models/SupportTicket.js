@@ -30,6 +30,16 @@ const supportTicketSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    stockQuantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    minOrderQuantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
     mediaUrl: {
       type: String,
       default: "",

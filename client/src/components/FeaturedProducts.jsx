@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axiosInstance from "../api/axios";
 import {
     MdChevronLeft,
@@ -26,7 +26,7 @@ const SkeletonCard = () => (
 );
 
 // ── Empty state ───────────────────────────────────────────────────
-const EmptyState = ({ onRefresh }) => {
+const EmptyState = React.memo(({ onRefresh }) => {
     const messages = [
         { emoji: "🌱", heading: "Wow, so empty!", sub: "Farmers are still waking up. Check back after chai." },
         { emoji: "🌾", heading: "Nothing to harvest yet.", sub: "The fields are quiet. Produce will arrive soon!" },
@@ -51,10 +51,10 @@ const EmptyState = ({ onRefresh }) => {
             </button>
         </motion.div>
     );
-};
+});
 
 // ── Product card ─────────────────────────────────────────────────
-const ProductCard = ({ product }) => (
+const ProductCard = React.memo(({ product }) => (
     <motion.div
         layout
         initial={{ opacity: 0, scale: 0.95 }}
@@ -98,7 +98,7 @@ const ProductCard = ({ product }) => (
             </div>
         </div>
     </motion.div>
-);
+));
 
 // ── Main Component ────────────────────────────────────────────────
 const FeaturedProducts = () => {
@@ -107,7 +107,7 @@ const FeaturedProducts = () => {
     const [activeCategory, setActiveCategory] = useState("All");
     const rowRef = useRef(null);
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
             const res = await axiosInstance.get("/items?status=published&isActive=true&limit=30");
@@ -117,14 +117,15 @@ const FeaturedProducts = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    useEffect(() => { fetchProducts(); }, []);
+    useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-    const filtered =
-        activeCategory === "All"
+    const filtered = useMemo(() => {
+        return activeCategory === "All"
             ? allProducts
             : allProducts.filter((p) => p.cropType === activeCategory);
+    }, [allProducts, activeCategory]);
 
     const scrollLeft = () => rowRef.current?.scrollBy({ left: -300, behavior: "smooth" });
     const scrollRight = () => rowRef.current?.scrollBy({ left: 300, behavior: "smooth" });
@@ -219,4 +220,4 @@ const FeaturedProducts = () => {
     );
 };
 
-export default FeaturedProducts;
+export default React.memo(FeaturedProducts);

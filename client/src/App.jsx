@@ -1,18 +1,20 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import Home from "./pages/Home.jsx";
-import Login from "./pages/Login.jsx";
-import Register from "./pages/Register.jsx";
-import MainDashboard from "./pages/MainDashboard.jsx";
-import AdminLogin from "./pages/AdminLogin.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx";
-import ForgotPassword from "./pages/ForgotPassword.jsx";
-import VerifyOTP from "./pages/VerifyOTP.jsx";
+
+const Home = lazy(() => import("./pages/Home.jsx"));
+const Login = lazy(() => import("./pages/Login.jsx"));
+const Register = lazy(() => import("./pages/Register.jsx"));
+const MainDashboard = lazy(() => import("./pages/MainDashboard.jsx"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin.jsx"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
+const VerifyOTP = lazy(() => import("./pages/VerifyOTP.jsx"));
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar.jsx";
+import { CartProvider } from "./context/CartContext.jsx";
 
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
@@ -102,42 +104,50 @@ const App = () => {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
+        <CartProvider>
         <ToastContainer theme="dark" />
         <LayoutWithNavbar>
           <div className="font-inria bg-background text-foreground min-h-screen">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/verify-otp" element={<VerifyOTP />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
+            <Suspense fallback={
+              <div className="p-10 text-center text-lg font-semibold text-green-700 animate-pulse">
+                🌱 Loading Kisan-e-Mandi...
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/verify-otp" element={<VerifyOTP />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
 
-              <Route
-                path="/dashboard/*"
-                element={
-                  <PrivateRoute allowedRoles={['farmer', 'admin', 'customer']}>
-                    <MainDashboard />
-                  </PrivateRoute>
-                }
-              />
+                <Route
+                  path="/dashboard/*"
+                  element={
+                    <PrivateRoute allowedRoles={['farmer', 'admin', 'customer']}>
+                      <MainDashboard />
+                    </PrivateRoute>
+                  }
+                />
 
-              {/* Dedicated Admin Dashboard */}
-              <Route
-                path="/admin/dashboard"
-                element={
-                  <PrivateRoute allowedRoles={['admin']}>
-                    <AdminDashboard />
-                  </PrivateRoute>
-                }
-              />
+                {/* Dedicated Admin Dashboard */}
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <PrivateRoute allowedRoles={['admin']}>
+                      <AdminDashboard />
+                    </PrivateRoute>
+                  }
+                />
 
-              <Route path="*" element={<div className="p-4 text-center text-red-600">404 - Page Not Found</div>} />
-            </Routes>
+                <Route path="*" element={<div className="p-4 text-center text-red-600">404 - Page Not Found</div>} />
+              </Routes>
+            </Suspense>
           </div>
         </LayoutWithNavbar>
+        </CartProvider>
       </Router>
     </GoogleOAuthProvider>
   );

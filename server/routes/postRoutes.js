@@ -28,7 +28,7 @@ const optionalProtect = (req, res, next) => {
   next();
 };
 
-// ── Named /user/* routes  (MUST be before /:id wildcard) ────────
+// ── Named /user/* routes ───────
 router.get("/user/me", protect, getMyPosts);           // my posts
 router.get("/user/saved", protect, getSavedPosts);     // saved posts
 router.get("/user/stats", protect, getDashboardStats); // dashboard stats

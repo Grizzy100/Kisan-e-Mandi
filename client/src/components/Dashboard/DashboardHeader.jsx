@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdSearch, MdNotifications, MdMail, MdChevronLeft, MdChevronRight, MdMenu } from "react-icons/md";
+import { MdSearch, MdNotifications, MdMail, MdChevronLeft, MdChevronRight, MdShoppingBasket } from "react-icons/md";
+import UserAvatar from "../ui/UserAvatar";
+import { useCart } from "../../context/CartContext";
 
 const DashboardHeader = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
   const [user, setUser] = useState(null);
+  const { itemCount, openCart } = useCart();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -50,6 +53,19 @@ const DashboardHeader = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
+            {user?.role === "customer" && (
+              <button 
+                onClick={openCart}
+                className="p-2 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-sm transition-all relative"
+              >
+                <MdShoppingBasket className="w-5 h-5" />
+                {itemCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full border-2 border-white shadow-sm">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+            )}
             <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-sm transition-all relative">
               <MdNotifications className="w-5 h-5" />
               <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border-2 border-white" />
@@ -67,10 +83,12 @@ const DashboardHeader = ({ sidebarOpen, setSidebarOpen }) => {
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest leading-none">{user?.role || "Member"}</p>
             </div>
             <div className="relative">
-              <img
-                src={user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.name || "U") + "&background=10b981&color=fff"}
+              <UserAvatar
+                src={user?.avatar}
+                email={user?.email}
+                name={user?.name}
                 alt="Profile"
-                className="w-9 h-9 rounded-sm object-cover ring-2 ring-transparent group-hover:ring-green-100 transition-all"
+                className="w-9 h-9 rounded-sm ring-2 ring-transparent group-hover:ring-green-100 transition-all text-sm"
               />
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
             </div>

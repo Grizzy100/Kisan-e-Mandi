@@ -35,7 +35,7 @@ export function DashboardContent() {
             Dashboard Overview
           </h1>
           <p className="text-sm text-gray-500 font-medium">
-            Welcome back! Here's a snapshot of your marketplace performance.
+            Welcome back!
           </p>
         </div>
 

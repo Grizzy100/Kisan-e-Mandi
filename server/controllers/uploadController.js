@@ -1,4 +1,4 @@
-// controllers/uploadController.js
+// server\controllers\uploadController.js
 import cloudinary from "../config/cloudinary.js";
 
 /**

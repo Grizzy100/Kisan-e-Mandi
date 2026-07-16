@@ -1,3 +1,4 @@
+//server\routes\analyticsRoutes.js
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import Order from "../models/Order.js";
@@ -17,6 +18,9 @@ router.get("/earnings", protect, async (req, res) => {
     else if (range === '30d') startDate.setDate(startDate.getDate() - 30);
     else if (range === '3m') startDate.setMonth(startDate.getMonth() - 3);
     else startDate.setDate(startDate.getDate() - 7); // Default to 7d
+
+    // Normalize to UTC midnight to avoid partial day cutoffs and timezone mismatch
+    startDate.setUTCHours(0, 0, 0, 0);
 
     const orders = await Order.find({
       sellerId,
@@ -53,6 +57,7 @@ router.get("/earnings", protect, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 // @desc    Get spending analytics for customers
 // @route   GET /api/analytics/spending
 // @access  Private (Customer)
@@ -65,9 +70,14 @@ router.get("/spending", protect, async (req, res) => {
     if (range === '7d') startDate.setDate(startDate.getDate() - 7);
     else if (range === '30d') startDate.setDate(startDate.getDate() - 30);
     else if (range === '3m') startDate.setMonth(startDate.getMonth() - 3);
+    else startDate.setDate(startDate.getDate() - 7); // Default to 7d
 
+    // Normalize to UTC midnight to avoid partial day cutoffs and timezone mismatch
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    // FIX: Using customerId as defined in the Order schema instead of non-existent userId
     const orders = await Order.find({
-      userId: buyerId,
+      customerId: buyerId,
       status: { $nin: ["cancelled"] },
       createdAt: { $gte: startDate }
     }).sort({ createdAt: 1 });
@@ -100,3 +110,11 @@ router.get("/spending", protect, async (req, res) => {
 });
 
 export default router;
+
+
+
+// This contains the :
+// 1) Earning of farmers done in 1week, 1 month etc
+// 2) Spending of customers done in 1week, 1 month etc
+
+

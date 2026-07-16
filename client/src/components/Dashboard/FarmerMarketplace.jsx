@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "react-toastify";
 import { getMyItems, publishItem, shelveItem, deleteItem } from "../../api/itemAPI";
 import { ProductCard } from "./Item/ProductCard";
@@ -28,7 +28,7 @@ export default function FarmerMarketplace() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("pending");
 
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getMyItems();
@@ -38,13 +38,13 @@ export default function FarmerMarketplace() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, [fetchItems]);
 
-  const handleAccept = async (id) => {
+  const handleAccept = useCallback(async (id) => {
     try {
       await publishItem(id);
       toast.success("Listing is now live! 🌾");
@@ -52,9 +52,9 @@ export default function FarmerMarketplace() {
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not publish.");
     }
-  };
+  }, [fetchItems]);
 
-  const handleLater = async (id) => {
+  const handleLater = useCallback(async (id) => {
     try {
       await shelveItem(id);
       toast.info("Listing shelved.");
@@ -62,9 +62,9 @@ export default function FarmerMarketplace() {
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not shelve.");
     }
-  };
+  }, [fetchItems]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     if (!window.confirm("Permanently delete this?")) return;
     try {
       await deleteItem(id);
@@ -73,11 +73,11 @@ export default function FarmerMarketplace() {
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not delete.");
     }
-  };
+  }, [fetchItems]);
 
-  const pendingItems = items.filter((i) => i.status === "approved_hidden");
-  const liveItems = items.filter((i) => i.status === "published" && i.isActive);
-  const shelvedItems = items.filter((i) => i.status === "shelved");
+  const pendingItems = useMemo(() => items.filter((i) => i.status === "approved_hidden"), [items]);
+  const liveItems = useMemo(() => items.filter((i) => i.status === "published" && i.isActive), [items]);
+  const shelvedItems = useMemo(() => items.filter((i) => i.status === "shelved"), [items]);
 
   const tabLabels = {
     pending: `Awaiting Accept (${pendingItems.length})`,

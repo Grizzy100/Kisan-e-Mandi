@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Org from "../../assets/organic.png";
 import Irri from "../../assets/irrigation.png";
 import Fert from "../../assets/fertilizers.png";
@@ -36,25 +36,25 @@ const deals = [
   }
 ];
 
-export function DealsCarousel() {
+export const DealsCarousel = React.memo(function DealsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const timeoutRef = useRef(null);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % deals.length);
-  };
+  }, []);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + deals.length) % deals.length);
-  };
+  }, []);
 
   useEffect(() => {
     if (!isHovered) {
       timeoutRef.current = setTimeout(nextSlide, 5000);
     }
     return () => clearTimeout(timeoutRef.current);
-  }, [currentIndex, isHovered]);
+  }, [currentIndex, isHovered, nextSlide]);
 
   return (
     <div
@@ -165,4 +165,4 @@ export function DealsCarousel() {
       </div>
     </div>
   );
-}
+});

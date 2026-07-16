@@ -29,3 +29,13 @@ docs/
 .vscode
 
 .PROBLEMS_AND_SOLUTIONS.md
+
+# Local dev config and temporary guides
+client/.env.development
+interview_prep.md
+interview_talk_guide.md
+data_flow_guide.md
+interview-demo/
+
+
+production_bugs_breakdown.md

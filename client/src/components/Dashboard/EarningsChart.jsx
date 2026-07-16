@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import axiosInstance from "../../api/axios";
 import { MdTrendingUp, MdCalendarToday, MdRefresh } from "react-icons/md";
@@ -10,6 +10,12 @@ import { MdTrendingUp, MdCalendarToday, MdRefresh } from "react-icons/md";
  * @param {string} description - The sub-description.
  * @param {string} dataKey - The key in the data objects to plot (e.g., 'earnings' or 'spending').
  */
+const ranges = [
+  { id: "7d", label: "7 Days" },
+  { id: "30d", label: "30 Days" },
+  { id: "3m", label: "3 Months" },
+];
+
 export default function EarningsChart({ 
   endpoint = "/analytics/earnings", 
   title = "Revenue Analytics", 
@@ -20,13 +26,7 @@ export default function EarningsChart({
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState("7d");
 
-  const ranges = [
-    { id: "7d", label: "7 Days" },
-    { id: "30d", label: "30 Days" },
-    { id: "3m", label: "3 Months" },
-  ];
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axiosInstance.get(`${endpoint}?range=${range}`);
@@ -36,11 +36,11 @@ export default function EarningsChart({
     } finally {
       setLoading(false);
     }
-  };
+  }, [range, endpoint]);
 
   useEffect(() => {
     fetchAnalytics();
-  }, [range, endpoint]);
+  }, [fetchAnalytics]);
 
   const totalValue = useMemo(() => {
     return data.reduce((acc, curr) => acc + (curr[dataKey] || 0), 0);

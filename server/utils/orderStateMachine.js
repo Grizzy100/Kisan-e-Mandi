@@ -1,3 +1,5 @@
+//server\utils\orderStateMachine.js
+//Initialiazed 
 export const ORDER_STATUS = Object.freeze({
   PENDING: "pending",
   CONFIRMED: "confirmed",
@@ -6,6 +8,8 @@ export const ORDER_STATUS = Object.freeze({
   CANCELLED: "cancelled",
 });
 
+
+//Next destination
 const ORDER_TRANSITIONS = Object.freeze({
   [ORDER_STATUS.PENDING]: new Set([ORDER_STATUS.CONFIRMED, ORDER_STATUS.CANCELLED]),
   [ORDER_STATUS.CONFIRMED]: new Set([ORDER_STATUS.SHIPPED, ORDER_STATUS.CANCELLED]),
@@ -32,11 +36,13 @@ export function checkOrderTransition({
   assert = false,
 }) {
   // Input validation
+  //If nothing is being fetched 
   if (!currentStatus || !nextStatus || !actorRole) {
     const reason = 'Missing required transition parameters';
     if (assert) throw Object.assign(new Error(reason), { statusCode: 400 });
     return { allowed: false, reason };
   }
+  //if the present status are not present in the ORDER_STATUS
   if (!Object.values(ORDER_STATUS).includes(currentStatus)) {
     const reason = `Unknown current status: ${currentStatus}`;
     if (assert) throw Object.assign(new Error(reason), { statusCode: 400 });
@@ -47,6 +53,8 @@ export function checkOrderTransition({
     if (assert) throw Object.assign(new Error(reason), { statusCode: 400 });
     return { allowed: false, reason };
   }
+
+  //Allow next status
   if (currentStatus === nextStatus) {
     return { allowed: true };
   }
@@ -128,3 +136,14 @@ export const canActorUpdateOrder = ({
 
   return false;
 };
+
+
+
+
+// This files contains the status of the
+// 1) ORDER_STATUS
+// 2) Order transitions like ek order se kounsa order
+// 3) What Admin, Buyer, Farmer are allowed to do
+// 4) Which task should be allowed to do after what state etc
+
+

@@ -19,6 +19,8 @@ const itemSchema = new mongoose.Schema(
       required: true,
     },
 
+
+
     // ── Product details ────────────────────────────────────────
     name: { type: String, required: true, trim: true },
     description: { type: String, required: true },
@@ -36,6 +38,10 @@ const itemSchema = new mongoose.Schema(
       default: "kg",
     },
     quantity: { type: Number, default: 1 },
+    minOrderQuantity: { type: Number, default: 1, min: 1 },
+
+
+
 
     // ── Media ──────────────────────────────────────────────────
     imageUrl: { type: String },
@@ -46,9 +52,14 @@ const itemSchema = new mongoose.Schema(
       default: "image",
     },
 
+
+
+
     // ── Location ───────────────────────────────────────────────
     location: { type: String, trim: true },
 
+
+    
     // ── Status ─────────────────────────────────────────────────
     status: {
       type: String,

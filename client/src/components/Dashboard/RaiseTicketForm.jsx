@@ -20,12 +20,16 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
     subject: "",
     description: "",
     price: "",
+    stockQuantity: "",
+    minOrderQuantity: "",
     media: null,
   });
-  const [mediaPreview, setMediaPreview] = useState(null);
-  const [mediaIsVideo, setMediaIsVideo] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(null);
+  const [mediaPreview, setMediaPreview]   = useState(null);
+  const [mediaIsVideo, setMediaIsVideo]   = useState(false);
+  const [uploadedMedia, setUploadedMedia] = useState({ url: "", type: "image" }); // eager upload result
+  const [mediaUploading, setMediaUploading] = useState(false); // shows spinner while uploading
+  const [loading, setLoading]   = useState(false);
+  const [success, setSuccess]   = useState(null);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -33,10 +37,15 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
     else setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleMediaUpload = (file) => {
+  // Eager upload: fires as soon as user selects a file
+  // By the time they click Submit, the file is already on Cloudinary
+  const handleMediaUpload = async (file) => {
     const isVideo = file.type.startsWith("video");
     setMediaIsVideo(isVideo);
-    setFormData({ ...formData, media: file });
+    setFormData((prev) => ({ ...prev, media: file }));
+    setUploadedMedia({ url: "", type: isVideo ? "video" : "image" });
+
+    // Show local preview immediately
     if (isVideo) {
       setMediaPreview(URL.createObjectURL(file));
     } else {
@@ -44,55 +53,71 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
       reader.onload = (e) => setMediaPreview(e.target.result);
       reader.readAsDataURL(file);
     }
+
+    // Upload to Cloudinary in the background while user fills the rest of the form
+    try {
+      setMediaUploading(true);
+      const signRes  = await axiosInstance.get("/upload/sign");
+      const signData = signRes.data;
+
+      const cloudData = new FormData();
+      cloudData.append("file",      file);
+      cloudData.append("api_key",   signData.apiKey);
+      cloudData.append("timestamp", signData.timestamp);
+      cloudData.append("signature", signData.signature);
+      cloudData.append("folder",    signData.folder);
+
+      const uploadType = isVideo ? "video" : "image";
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${signData.cloudName}/${uploadType}/upload`,
+        { method: "POST", body: cloudData }
+      );
+      const uploaded = await res.json();
+      if (!uploaded.secure_url) throw new Error("Upload failed");
+      setUploadedMedia({ url: uploaded.secure_url, type: uploadType });
+    } catch (err) {
+      toast.error("Media upload failed. Please try again.");
+      setMediaPreview(null);
+      setFormData((prev) => ({ ...prev, media: null }));
+    } finally {
+      setMediaUploading(false);
+    }
   };
 
   const removeMedia = () => {
-    setFormData({ ...formData, media: null });
+    setFormData((prev) => ({ ...prev, media: null }));
     setMediaPreview(null);
     setMediaIsVideo(false);
+    setUploadedMedia({ url: "", type: "image" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.category || !formData.subject || !formData.description || !formData.price) {
-      toast.error("Please fill in category, subject, description, and price.");
+    if (!formData.category || !formData.subject || !formData.description || !formData.price || !formData.stockQuantity || !formData.minOrderQuantity) {
+      toast.error("Please fill in all details including stock and minimum order quantity.");
       return;
     }
 
     setLoading(true);
     try {
-      let mediaUrl = "";
-      let mediaType = "image";
-
-      if (formData.media) {
-        mediaType = mediaIsVideo ? "video" : "image";
-        const signRes = await axiosInstance.get("/upload/sign");
-        const signData = signRes.data;
-
-        const cloudData = new FormData();
-        cloudData.append("file", formData.media);
-        cloudData.append("api_key", signData.apiKey);
-        cloudData.append("timestamp", signData.timestamp);
-        cloudData.append("signature", signData.signature);
-        cloudData.append("folder", signData.folder);
-
-        const uploadType = mediaIsVideo ? "video" : "image";
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${signData.cloudName}/${uploadType}/upload`,
-          { method: "POST", body: cloudData }
-        );
-        const uploaded = await res.json();
-        if (!uploaded.secure_url) throw new Error("Upload failed");
-        mediaUrl = uploaded.secure_url;
+      // If a file was selected but upload is still in progress, wait briefly
+      if (formData.media && mediaUploading) {
+        toast.info("Media is still uploading, please wait a moment...");
+        setLoading(false);
+        return;
       }
 
+      // Cloudinary upload already done during file selection (eager upload)
+      // Just send the already-uploaded URL directly
       const result = await createSupportTicket({
-        category: formData.category,
-        subject: formData.subject,
+        category:    formData.category,
+        subject:     formData.subject,
         description: formData.description,
-        price: Number(formData.price),
-        mediaUrl,
-        mediaType,
+        price:       Number(formData.price),
+        stockQuantity: Number(formData.stockQuantity),
+        minOrderQuantity: Number(formData.minOrderQuantity),
+        mediaUrl:    uploadedMedia.url,
+        mediaType:   uploadedMedia.type || "image",
       });
 
       // Responsive Success Toast
@@ -132,7 +157,7 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
 
         <div className="flex flex-col items-center gap-3">
           <button
-            onClick={() => { setSuccess(null); setFormData({ category: "", subject: "", description: "", price: "", media: null }); setMediaPreview(null); }}
+            onClick={() => { setSuccess(null); setFormData({ category: "", subject: "", description: "", price: "", stockQuantity: "", minOrderQuantity: "", media: null }); setMediaPreview(null); }}
             className="w-full sm:w-auto px-8 py-3 bg-gray-900 hover:bg-black text-white rounded-sm text-sm font-bold shadow-sm transition-all"
           >
             Enlist Another Crop
@@ -203,6 +228,36 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Total Stock Available */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Total Available Stock</label>
+            <input
+              type="number"
+              name="stockQuantity"
+              value={formData.stockQuantity}
+              onChange={handleChange}
+              min="1"
+              placeholder="e.g. 500"
+              className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all text-gray-700 bg-gray-50/30"
+            />
+          </div>
+
+          {/* Minimum Order Quantity */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Minimum Order Quantity (MOQ)</label>
+            <input
+              type="number"
+              name="minOrderQuantity"
+              value={formData.minOrderQuantity}
+              onChange={handleChange}
+              min="1"
+              placeholder="e.g. 50"
+              className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all text-gray-700 bg-gray-50/30"
+            />
+          </div>
+        </div>
+
         {/* Description */}
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Detailed Specifications</label>
@@ -230,23 +285,37 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
               ) : (
                 <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
               )}
+              {/* Uploading spinner overlay */}
+              {mediaUploading && (
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="text-white text-[10px] font-bold uppercase tracking-widest">Uploading...</span>
+                </div>
+              )}
+              {/* Ready indicator */}
+              {!mediaUploading && uploadedMedia.url && (
+                <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Ready ✓
+                </div>
+              )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <button 
-                  type="button" 
-                  onClick={removeMedia} 
+                <button
+                  type="button"
+                  onClick={removeMedia}
                   className="w-10 h-10 bg-white text-gray-900 rounded-sm flex items-center justify-center hover:bg-red-500 hover:text-white transition-all transform scale-90 group-hover:scale-100"
                 >
                   <MdClose className="w-6 h-6" />
                 </button>
               </div>
             </div>
+
           ) : (
             <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/20 rounded-sm p-10 cursor-pointer transition-all group">
               <div className="w-14 h-14 bg-gray-50 group-hover:bg-emerald-50 rounded-sm flex items-center justify-center mb-4 transition-colors">
                 <MdCloudUpload className="text-gray-400 group-hover:text-emerald-600 w-7 h-7" />
               </div>
-              <p className="text-sm font-bold text-gray-700">Attach High-Res Images or Video</p>
-              <p className="text-xs text-gray-400 mt-1 uppercase font-bold tracking-tighter">Drag and drop or click to browse</p>
+              <p className="text-sm font-bold text-gray-700">Attach Images or Video</p>
+              <p className="text-xs text-gray-400 mt-1 uppercase font-bold tracking-tighter">Click to browse</p>
               <input type="file" name="media" accept="image/*,video/*" onChange={handleChange} className="hidden" />
             </label>
           )}

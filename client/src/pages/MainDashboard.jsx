@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
@@ -13,15 +13,17 @@ import { DashboardContent } from "../components/Dashboard/DashboardContent";
 import AdminApproval from "../components/Dashboard/AdminApproval";
 import MySection from "../components/Dashboard/MySection";
 import CustomerOverview from "../components/Dashboard/CustomerOverview";
+import { CartDrawer } from "../components/Dashboard/CartDrawer";
 import AdminOverview from "../components/Dashboard/AdminOverview";
 import CustomerOrders from "../components/Dashboard/CustomerOrders";
 import VendorOrders from "../components/Dashboard/VendorOrders";
 import OrderTrackingPage from "../components/Dashboard/OrderTrackingPage";
 
 const MainDashboard = () => {
-  // Extract user info
-  const userString = localStorage.getItem("user");
-  const user = userString ? JSON.parse(userString) : {};
+  const user = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem("user")) || {}; }
+    catch { return {}; }
+  }, []);
   const role = user.role || "customer";
 
   const navigate = useNavigate();
@@ -56,10 +58,10 @@ const MainDashboard = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleSectionChange = (section) => {
+  const handleSectionChange = useCallback((section) => {
     setCurrentSection(section);
     navigate(`/dashboard/${section === "dashboard" ? "" : section}`);
-  };
+  }, [navigate]);
 
   return (
     <div className="relative flex h-screen w-full max-w-full bg-gray-50 overflow-hidden font-inter">
@@ -120,6 +122,7 @@ const MainDashboard = () => {
           </Routes>
         </main>
       </div>
+      {role === "customer" && <CartDrawer />}
     </div>
   );
 };

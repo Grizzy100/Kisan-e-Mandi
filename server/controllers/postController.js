@@ -1,3 +1,4 @@
+//server\controllers\postController.js
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import Item from "../models/Item.js";
@@ -27,10 +28,12 @@ export const createPost = async (req, res) => {
       cropName,
       price,
       userId,
-      status: "pending",
+      status: "approved",
     });
 
-    res.status(201).json({ message: "Post created and submitted for approval.", post: newPost });
+    const populatedPost = await Post.findById(newPost._id).populate("userId", "name avatar email");
+
+    res.status(201).json({ message: "Post created successfully.", post: populatedPost });
   } catch (error) {
     console.error("Error creating post:", error);
     res.status(500).json({ message: "Server error while creating post." });
@@ -107,30 +110,32 @@ export const getPost = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 export const toggleLikePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const postId = req.params.id;
+    const userId = req.user?._id;
+
+    if (!postId || !userId) {
+      return res.status(400).json({ message: "Invalid request data. User must be authenticated." });
+    }
+
+    const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ message: "Post not found." });
 
-    const userId = req.user._id.toString();
-    // Convert all stored IDs to strings for reliable comparison
-    const likeStrings = post.likes.map((id) => id.toString());
-    const index = likeStrings.indexOf(userId);
+    // Compare ObjectIds securely by converting to strings
+    const hasLiked = post.likes.some((id) => id.toString() === userId.toString());
+    const update = hasLiked 
+      ? { $pull: { likes: userId } } 
+      : { $addToSet: { likes: userId } };
 
-    if (index === -1) {
-      // Not liked yet — add
-      post.likes.push(req.user._id);
-    } else {
-      // Already liked — remove (toggle off)
-      post.likes.splice(index, 1);
-    }
-    await post.save();
+    const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true });
 
+    res.setHeader("Content-Type", "application/json");
     res.status(200).json({
-      liked: index === -1,
-      likesCount: post.likes.length,
+      liked: !hasLiked,
+      likesCount: updatedPost.likes.length,
     });
   } catch (error) {
     console.error("toggleLikePost error:", error);
-    res.status(500).json({ message: "Server error." });
+    res.status(500).json({ message: "Server error while toggling like." });
   }
 };
 
@@ -139,27 +144,32 @@ export const toggleLikePost = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 export const toggleSavePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const postId = req.params.id;
+    const userId = req.user?._id;
+
+    if (!postId || !userId) {
+      return res.status(400).json({ message: "Invalid request data. User must be authenticated." });
+    }
+
+    const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ message: "Post not found." });
 
-    const userId = req.user._id.toString();
-    const savedStrings = post.savedBy.map((id) => id.toString());
-    const index = savedStrings.indexOf(userId);
+    // Compare ObjectIds securely by converting to strings
+    const hasSaved = post.savedBy.some((id) => id.toString() === userId.toString());
+    const update = hasSaved 
+      ? { $pull: { savedBy: userId } } 
+      : { $addToSet: { savedBy: userId } };
 
-    if (index === -1) {
-      post.savedBy.push(req.user._id);
-    } else {
-      post.savedBy.splice(index, 1);
-    }
-    await post.save();
+    const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true });
 
+    res.setHeader("Content-Type", "application/json");
     res.status(200).json({
-      saved: index === -1,
-      savedCount: post.savedBy.length,
+      saved: !hasSaved,
+      savedCount: updatedPost.savedBy.length,
     });
   } catch (error) {
     console.error("toggleSavePost error:", error);
-    res.status(500).json({ message: "Server error." });
+    res.status(500).json({ message: "Server error while toggling save." });
   }
 };
 
@@ -232,25 +242,32 @@ export const getComments = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 export const toggleLikeComment = async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.commentId);
+    const commentId = req.params.commentId;
+    const userId = req.user?._id;
+
+    if (!commentId || !userId) {
+      return res.status(400).json({ message: "Invalid request data. User must be authenticated." });
+    }
+
+    const comment = await Comment.findById(commentId);
     if (!comment) return res.status(404).json({ message: "Comment not found." });
 
-    const userId = req.user._id;
-    const index = comment.likes.indexOf(userId);
+    // Compare ObjectIds securely by converting to strings
+    const hasLiked = comment.likes.some((id) => id.toString() === userId.toString());
+    const update = hasLiked 
+      ? { $pull: { likes: userId } } 
+      : { $addToSet: { likes: userId } };
 
-    if (index === -1) {
-      comment.likes.push(userId);
-    } else {
-      comment.likes.splice(index, 1);
-    }
-    await comment.save();
+    const updatedComment = await Comment.findByIdAndUpdate(commentId, update, { new: true });
 
+    res.setHeader("Content-Type", "application/json");
     res.status(200).json({
-      liked: index === -1,
-      likesCount: comment.likes.length,
+      liked: !hasLiked,
+      likesCount: updatedComment.likes.length,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error." });
+    console.error("toggleLikeComment error:", error);
+    res.status(500).json({ message: "Server error while toggling comment like." });
   }
 };
 
@@ -436,3 +453,10 @@ export const getDashboardStats = async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 };
+
+
+
+// This takes care of Ticket raised logic and also Social Media posts by farmers
+// Social media elements like bookmark ,likes, comments, nested comments,
+// The admin approves or rejects the tickets etc
+

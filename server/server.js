@@ -1,8 +1,9 @@
+import "./config/env.js"; // ← MUST be first: loads .env before any other module
 import express from "express";
-import "dotenv/config";
 import cors from "cors";
+
 import connectDB from "./config/db.js";
-import { protect } from "./middleware/authMiddleware.js";
+
 import errorHandler from "./middleware/errorHandler.js";
 
 // Route Imports
@@ -32,10 +33,7 @@ app.get("/api/health", (req, res) => {
 	res.status(200).json({ status: "ok" });
 });
 
-// Protected Test Route
-// app.get("/api/protected", protect, (req, res) => {
-//   res.json({ message: "You are authenticated", user: req.user });
-// });
+
 
 // API Routes
 app.use("/api/auth",    authRoutes);

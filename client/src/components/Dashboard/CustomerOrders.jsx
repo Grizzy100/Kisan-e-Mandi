@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMyOrders, updateOrderStatus } from "../../api/orderAPI";
 import { toast } from "react-toastify";
@@ -26,18 +26,21 @@ export default function CustomerOrders() {
   const [cancelling, setCancelling] = useState(null);
   const [reorderProduct, setReorderProduct] = useState(null);
 
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('user')); }
+    catch { return null; }
+  }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try { setOrders(await getMyOrders()); }
     catch { /* silent */ }
     finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  const handleCancel = async (id) => {
+  const handleCancel = useCallback(async (id) => {
     if (!window.confirm("Cancel this order?")) return;
     setCancelling(id);
     try {
@@ -49,9 +52,9 @@ export default function CustomerOrders() {
     } finally {
       setCancelling(null);
     }
-  };
+  }, [fetchOrders]);
 
-  const handleBuyAgain = (order) => {
+  const handleBuyAgain = useCallback((order) => {
     setReorderProduct({
       id: order.itemId?._id || order.itemId,
       name: order.itemName,
@@ -61,7 +64,7 @@ export default function CustomerOrders() {
       sellerName: order.sellerId?.name || "Farmer",
       location: order.deliveryAddress?.split(',')[0]
     });
-  };
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 lg:px-6 space-y-10 font-inter">

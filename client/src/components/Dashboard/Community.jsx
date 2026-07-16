@@ -158,7 +158,7 @@
 
 // Community.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   MdAdd, MdClose, MdImage, MdGroup, MdTrendingUp, MdFavorite,
   MdPerson, MdVideoLibrary, MdPostAdd,
@@ -201,19 +201,19 @@ const Community = () => {
     fetchMyPosts();
   }, [fetchPosts, fetchMyPosts]);
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "all", label: "All Posts", icon: MdGroup },
     { id: "trending", label: "Trending", icon: MdTrendingUp },
     { id: "popular", label: "Popular", icon: MdFavorite },
     { id: "mine", label: "My Posts", icon: MdPerson },
-  ];
+  ], []);
 
-  const displayPosts = (() => {
+  const displayPosts = useMemo(() => {
     if (activeTab === "mine") return myPosts;
     if (activeTab === "trending") return [...posts].sort((a, b) => (b.commentsCount || 0) - (a.commentsCount || 0));
     if (activeTab === "popular") return [...posts].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
     return posts;
-  })();
+  }, [activeTab, posts, myPosts]);
 
   const handleNewPost = async (formData) => {
     try {

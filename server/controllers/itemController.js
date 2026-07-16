@@ -1,3 +1,4 @@
+//server\controllers\itemController.js
 import Item from "../models/Item.js";
 import {
   ITEM_STATUS,
@@ -58,7 +59,6 @@ export const getItems = async (req, res) => {
       .populate("sellerId", "name avatar email")
       .sort({ createdAt: -1 });
 
-    console.log(`📦 [getItems] Returning ${items.length} published items`);
     res.status(200).json(items);
   } catch (error) {
     console.error("Error fetching items:", error);
@@ -73,7 +73,6 @@ export const debugAllItems = async (req, res) => {
       {},
       "name status isActive cropType price createdAt ticketId postId"
     ).sort({ createdAt: -1 });
-    console.log(`🔍 [debugAllItems] Total items in DB: ${items.length}`);
     res.status(200).json({ total: items.length, items });
   } catch (error) {
     console.error("Debug items error:", error);
@@ -110,7 +109,6 @@ export const fixStaleItems = async (req, res) => {
       pendingAdminMadeInactive: pendingMadeInactive.modifiedCount,
     };
 
-    console.log("🔧 [fixStaleItems] Repaired inconsistent item states:", summary);
     res.status(200).json({ message: "Consistency repair complete", summary });
   } catch (error) {
     console.error("Fix stale items error:", error);
@@ -271,3 +269,14 @@ export const shelveItem = async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 };
+
+
+
+
+//This files acts
+// 1) It updates the DB
+// 2) For buyer, getItem, buyItem
+// 3) Provides JSON Http output
+// 4) itemMachineState acts as validator for this to check the status and decide the next state
+
+// "I separated the item logic into two controllers based on read/write patterns. itemController.js handles all transactional mutations—creating, updating, publishing, and shelving individual items. itemStatsController.js handles analytical aggregations. I wrote the stats controller specifically for the dashboard load-moment; by using MongoDB aggregation pipelines on the backend, I avoid sending massive arrays of data to the frontend just to count item statuses, which drastically improves dashboard load times."

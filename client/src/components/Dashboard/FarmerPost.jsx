@@ -90,9 +90,9 @@ export function FarmerPost({ post }) {
   if (!post) return null;
 
   const currentUserId = JSON.parse(localStorage.getItem("user") || "{}")?._id;
-  const [liked, setLiked] = useState(post.liked || false);
+  const [liked, setLiked] = useState(post.likes?.includes(currentUserId) || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || post.likes?.length || 0);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(post.savedBy?.includes(currentUserId) || false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);

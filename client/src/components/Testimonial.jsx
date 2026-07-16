@@ -76,7 +76,7 @@ const testimonials = [
   },
 ];
 
-const TestimonialCard = ({ testimonial }) => (
+const TestimonialCard = React.memo(({ testimonial }) => (
   <div className="mt-6 bg-gray-50 rounded-xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 mb-6 
                   w-full max-w-[220px] sm:max-w-[250px] md:max-w-[280px] lg:max-w-xs">
     <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
@@ -98,7 +98,7 @@ const TestimonialCard = ({ testimonial }) => (
     </p>
     <p className="text-[10px] sm:text-xs text-gray-400">{testimonial.date}</p>
   </div>
-);
+));
 
 const AnimatedColumn = ({ testimonials, direction = "up", speed = 50 }) => {
   const [translateY, setTranslateY] = useState(0);
@@ -191,4 +191,4 @@ const Testimonial = () => {
   );
 };
 
-export default Testimonial;
+export default React.memo(Testimonial);

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useLayoutEffect, useCallback, useMemo } from "react";
 
 const ThemeContext = createContext();
 
@@ -7,7 +7,7 @@ export const ThemeProvider = ({ children }) => {
         return localStorage.getItem("admin-theme") || "dark";
     });
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const root = document.documentElement;
         if (theme === "dark") {
             root.classList.add("dark");
@@ -17,10 +17,12 @@ export const ThemeProvider = ({ children }) => {
         localStorage.setItem("admin-theme", theme);
     }, [theme]);
 
-    const setTheme = (t) => setThemeState(t);
+    const setTheme = useCallback((t) => setThemeState(t), []);
+
+    const value = useMemo(() => ({ theme, setTheme }), [theme, setTheme]);
 
     return (
-        <ThemeContext.Provider value={{ theme, setTheme }}>
+        <ThemeContext.Provider value={value}>
             {children}
         </ThemeContext.Provider>
     );

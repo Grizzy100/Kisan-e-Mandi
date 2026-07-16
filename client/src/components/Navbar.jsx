@@ -4,19 +4,19 @@ import { FaBars, FaTimes } from "react-icons/fa";
 import { FiHome, FiLayers, FiHelpCircle, FiPhone, FiInfo } from "react-icons/fi";
 import Klogo from "../assets/KisanLogo.png";
 
+const navLinks = [
+  { name: "Home", path: "/", icon: <FiHome /> },
+  { name: "Services", path: "/services", icon: <FiLayers /> },
+  { name: "FAQs", path: "/faqs", icon: <FiHelpCircle /> },
+  { name: "Help", path: "/help", icon: <FiPhone /> },
+  { name: "About", path: "/about", icon: <FiInfo /> },
+];
+
 const Navbar = ({ hasPassedHero }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const menuRef = useRef(null);
-
-  const links = [
-    { name: "Home", path: "/", icon: <FiHome /> },
-    { name: "Services", path: "/services", icon: <FiLayers /> },
-    { name: "FAQs", path: "/faqs", icon: <FiHelpCircle /> },
-    { name: "Help", path: "/help", icon: <FiPhone /> },
-    { name: "About", path: "/about", icon: <FiInfo /> },
-  ];
 
   const handleVendorClick = () => navigate("/register");
   const handleLoginClick = () => navigate("/login");
@@ -64,7 +64,7 @@ const Navbar = ({ hasPassedHero }) => {
           <img src={Klogo} alt="Kisan Logo" className="h-16 w-auto" />
         </Link>
         <div className="flex space-x-6">
-          {links.map(({ name, path }) => (
+          {navLinks.map(({ name, path }) => (
             <Link
               key={name}
               to={path}
@@ -92,7 +92,7 @@ const Navbar = ({ hasPassedHero }) => {
           <img src={Klogo} alt="Kisan Logo" className="h-20 w-auto" />
         </Link>
         <div className="flex space-x-8">
-          {links.map(({ name, path }) => (
+          {navLinks.map(({ name, path }) => (
             <Link
               key={name}
               to={path}
@@ -136,7 +136,7 @@ const Navbar = ({ hasPassedHero }) => {
               Kisan-e-Mandi
             </div>
             <div className="divide-y divide-gray-200">
-              {links.map(({ name, path, icon }) => (
+              {navLinks.map(({ name, path, icon }) => (
                 <Link
                   key={name}
                   to={path}
@@ -155,4 +155,4 @@ const Navbar = ({ hasPassedHero }) => {
   );
 };
 
-export default Navbar;
+export default React.memo(Navbar);
