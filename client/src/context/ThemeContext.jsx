@@ -29,3 +29,11 @@ export const ThemeProvider = ({ children }) => {
 };
 
 export const useTheme = () => useContext(ThemeContext);
+
+
+
+//the <App/> in main.jsx is being rendered here in {children}
+//{children} is the prop that refers to component wrapped by custom wrappers
+
+//The purpose of the file is to provide a global state for the theme , instead of prop drilling
+//as prop drilling is not optimsed option in this situations for many components

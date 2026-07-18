@@ -105,9 +105,19 @@ export const createSupportTicket = async (req, res) => {
           </div>
         </div>
       `,
+    }, {
+      onSuccess: () => {
+        SupportTicket.findByIdAndUpdate(ticket._id, { confirmationEmailStatus: "sent" })
+          .catch(err => console.error(`[Email] Failed to mark email as sent for ticket ${ticket._id}:`, err.message));
+      },
+      onFailure: () => {
+        console.error(`[Email] Confirmation email permanently failed for ticket ${ticket._id} (${email}). Flagging in DB.`);
+        SupportTicket.findByIdAndUpdate(ticket._id, { confirmationEmailStatus: "failed" })
+          .catch(err => console.error(`[Email] Failed to flag email failure for ticket ${ticket._id}:`, err.message));
+      },
     });
   } catch (err) {
-    console.error("❌ Error creating support ticket:", err);
+    console.error("Error creating support ticket:", err);
     return res.status(500).json({ message: "Server error.", error: err.message });
   }
 };
@@ -120,7 +130,7 @@ export const getUserTickets = async (req, res) => {
 
     return res.json({ tickets });
   } catch (err) {
-    console.error("❌ Error fetching tickets:", err);
+    console.error("Error fetching tickets:", err);
     return res.status(500).json({ message: "Server error." });
   }
 };
@@ -177,7 +187,7 @@ export const updateTicketStatus = async (req, res) => {
 
       await item.save();
     } else {
-      console.warn(`⚠️ [updateTicketStatus] No item found with ticketId ${id} — item won't be updated!`);
+      console.warn(`[updateTicketStatus] No item found with ticketId ${id} — item won't be updated!`);
     }
 
 
@@ -199,10 +209,16 @@ export const updateTicketStatus = async (req, res) => {
             }
           </div>
         `,
+      }, {
+        onFailure: () => {
+          console.error(`[Email] Status-update email permanently failed for ticket ${ticket._id} (${ticket.email}). Flagging in DB.`);
+          SupportTicket.findByIdAndUpdate(ticket._id, { confirmationEmailStatus: "failed" })
+            .catch(err => console.error(`[Email] Failed to flag email failure for ticket ${ticket._id}:`, err.message));
+        },
       });
     }
   } catch (err) {
-    console.error("❌ Error updating ticket status:", err);
+    console.error("Error updating ticket status:", err);
     return res.status(500).json({ message: "Server error." });
   }
 };

@@ -53,7 +53,7 @@ export default function AdminAnalytics() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {cards.map((c, i) => (
-                    <StatCard key={i} {...c} loading={loading} />
+                    <StatCard key={i} {...c} loading={loading} />   //provided index like we studied in Joshita Jain
                 ))}
             </div>
 

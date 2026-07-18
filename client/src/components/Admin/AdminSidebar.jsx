@@ -41,8 +41,18 @@ export default function AdminSidebar({ currentSection, onSectionChange }) {
             className="flex flex-col h-full bg-gray-900 border-r border-gray-800 flex-shrink-0 relative"
         >
             {/* Collapse toggle */}
+            
+            {/* setCount(count+1)
+                setCount(count+1)
+
+                is different from setMinimized(!minimized)
+               
+                because setCount in both receives 0 when prevState is not used, like single
+                setCount(count+1) here the value changes one by one, but in second not like we envisioned
+            
+            */}
             <button
-                onClick={() => setMinimized(!minimized)}
+                onClick={() => setMinimized(!minimized)}    //minimized initially true, but here upon clicking the buttion we set it to opposite
                 className="absolute -right-3 top-8 w-6 h-6 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-full flex items-center justify-center z-10 transition-colors"
             >
                 {minimized ? (

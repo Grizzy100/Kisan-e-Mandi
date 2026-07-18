@@ -19,11 +19,22 @@ const STATUS_LABELS = {
 };
 
 export default function TicketsPanel() {
-    const [tickets, setTickets] = useState([]);
+    //reason : to hold the verification of tickets, which will be fetched from 
+    // the backend. Used empty instead of null or undefined , 
+    //because of filter being used here, (why ?TypeError: Cannot read properties of null.)
+    const [tickets, setTickets] = useState([]);   
     const [loading, setLoading] = useState(true);
+
+    //default is open because, the requests that are pending
     const [filter, setFilter] = useState("open");
+
+    //reason : to keep track of the ticket that is being processed,
+    // to prevent multiple requests from being sent at the same time.
     const [processing, setProcessing] = useState(null);
 
+
+    //Suspense or Lazy loading is to load big files or imports
+    //Claasic react hooks are used for data fetching, UI and DOM handling.
     const fetchTickets = async () => {
         setLoading(true);
         try {

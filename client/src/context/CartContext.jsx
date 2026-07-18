@@ -1,19 +1,24 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
+  //Lazy initialization
+  //const [cartItems, setCartItems] = useState([]);
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem('cartItems');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
+      return saved ? JSON.parse(saved) : [];     //if first time for the user, empty [] is initialized, else previous cart is loaded.
+    } 
+    catch {
       return [];
     }
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+
+  //main job is to sync React and local browser for the cart items being updated, removed, added
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
   }, [cartItems]);
@@ -88,6 +93,11 @@ export const CartProvider = ({ children }) => {
   const openCart = useCallback(() => setIsCartOpen(true), []);
   const closeCart = useCallback(() => setIsCartOpen(false), []);
 
+
+
+  //We use useCallback to cache the individual functions, 
+  // and useMemo to cache the overall wrapper object 
+  // so that a new object memory reference doesn't trigger re-renders in our components."
   const value = useMemo(() => ({
     cartItems,
     addToCart,

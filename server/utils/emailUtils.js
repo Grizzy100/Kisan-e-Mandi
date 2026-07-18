@@ -28,7 +28,7 @@ const BASE_DELAY_MS = 2000;     // 2s → 4s → 8s (exponential backoff)
  *
  * @param {object} mailOptions - Standard nodemailer mail options { to, subject, html }
  * @param {number} attempt     - Current attempt number (internal use, starts at 1)
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>} - true if email sent OK, false if all retries exhausted
  */
 export async function sendEmailWithRetry(mailOptions, attempt = 1) {
   console.log(`[Email] 🔄 Attempt ${attempt}/${MAX_RETRIES} — to: ${mailOptions.to}, subject: "${mailOptions.subject}"`);
@@ -37,16 +37,18 @@ export async function sendEmailWithRetry(mailOptions, attempt = 1) {
       from: `"Kisan e-Mandi" <${process.env.EMAIL_USER}>`,
       ...mailOptions,
     });
-    console.log(`[Email] ✅ Sent OK (attempt ${attempt}) — messageId: ${result.messageId}`);
+    console.log(`[Email] Sent OK (attempt ${attempt}) — messageId: ${result.messageId}`);
+    return true;
   } catch (err) {
-    console.error(`[Email] ❌ Attempt ${attempt} FAILED — ${err.code || ""} ${err.message}`);
+    console.error(`[Email] Attempt ${attempt} FAILED — ${err.code || ""} ${err.message}`);
     if (attempt < MAX_RETRIES) {
       const delayMs = BASE_DELAY_MS * Math.pow(2, attempt - 1); // 2s, 4s, 8s
-      console.warn(`[Email] ⏳ Retrying in ${delayMs / 1000}s... (${MAX_RETRIES - attempt} left)`);
+      console.warn(`[Email] Retrying in ${delayMs / 1000}s... (${MAX_RETRIES - attempt} left)`);
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       return sendEmailWithRetry(mailOptions, attempt + 1);
     } else {
-      console.error(`[Email] 💀 All ${MAX_RETRIES} attempts exhausted for "${mailOptions.subject}". Giving up.`);
+      console.error(`[Email] All ${MAX_RETRIES} attempts exhausted for "${mailOptions.subject}". Giving up.`);
+      return false;
     }
   }
 }
@@ -56,14 +58,22 @@ export async function sendEmailWithRetry(mailOptions, attempt = 1) {
  * Call this AFTER res.json() has been sent so the HTTP response is never blocked.
  *
  * Usage:
- *   res.status(201).json({ ticket });         // ← respond to user first
- *   fireEmail({ to, subject, html });         // ← email sends in background
+ *   res.status(201).json({ ticket });                    // ← respond to user first
+ *   fireEmail({ to, subject, html }, () => flagInDB());  // ← email sends in background
  *
- * @param {object} mailOptions - { to, subject, html }
+ * @param {object}   mailOptions - { to, subject, html }
+ * @param {function} [onFailure] - Optional callback that runs if all retries fail
+ * @param {function} [onSuccess] - Optional callback that runs if email sends OK
  */
-export function fireEmail(mailOptions) {
+export function fireEmail(mailOptions, { onFailure, onSuccess } = {}) {
   // Intentionally not awaited — runs entirely in background
-  sendEmailWithRetry(mailOptions).catch((err) => {
-    console.error("[Email] 💥 Unhandled background email error:", err.message);
-  });
+  sendEmailWithRetry(mailOptions)
+    .then((sent) => {
+      if (sent && onSuccess) onSuccess();
+      if (!sent && onFailure) onFailure();
+    })
+    .catch((err) => {
+      console.error("[Email] Unhandled background email error:", err.message);
+      if (onFailure) onFailure();
+    });
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { createSupportTicket } from "../../api/supportAPI.js";
 import { MdImage, MdVideoLibrary, MdClose, MdCloudUpload, MdCheckCircle } from "react-icons/md";
@@ -31,6 +31,11 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
   const [loading, setLoading]   = useState(false);
   const [success, setSuccess]   = useState(null);
 
+  // A counter that increments every time the farmer selects a new file.
+  // Each upload checks this before writing its result — if the number changed,
+  // it means a newer file was selected while this upload was in progress, so we discard the result.
+  const uploadGenRef = useRef(0);
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "media" && files?.[0]) handleMediaUpload(files[0]);
@@ -40,6 +45,9 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
   // Eager upload: fires as soon as user selects a file
   // By the time they click Submit, the file is already on Cloudinary
   const handleMediaUpload = async (file) => {
+    // Increment the generation counter for this new file selection
+    const myGen = ++uploadGenRef.current;
+
     const isVideo = file.type.startsWith("video");
     setMediaIsVideo(isVideo);
     setFormData((prev) => ({ ...prev, media: file }));
@@ -74,13 +82,26 @@ const RaiseTicketForm = ({ onTicketRaised }) => {
       );
       const uploaded = await res.json();
       if (!uploaded.secure_url) throw new Error("Upload failed");
+
+      // Only apply the result if the farmer hasn't selected a newer file since this upload started
+      if (myGen !== uploadGenRef.current) {
+        console.log("[Upload] Discarding stale upload — a newer file was selected.");
+        return;
+      }
+
       setUploadedMedia({ url: uploaded.secure_url, type: uploadType });
     } catch (err) {
-      toast.error("Media upload failed. Please try again.");
-      setMediaPreview(null);
-      setFormData((prev) => ({ ...prev, media: null }));
+      // Only show error if this is still the active upload
+      if (myGen === uploadGenRef.current) {
+        toast.error("Media upload failed. Please try again.");
+        setMediaPreview(null);
+        setFormData((prev) => ({ ...prev, media: null }));
+      }
     } finally {
-      setMediaUploading(false);
+      // Only clear the spinner if this is still the active upload
+      if (myGen === uploadGenRef.current) {
+        setMediaUploading(false);
+      }
     }
   };
 

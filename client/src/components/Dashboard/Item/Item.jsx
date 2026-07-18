@@ -36,12 +36,15 @@ const Item = () => {
     }
   }, []);
 
+
+  //For the buyer
   const isCustomer = user?.role === 'customer';
 
   const [allProducts, setAllProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  //when you 
   const [orderProduct, setOrderProduct] = useState(null);
 
   const [selectedCategories, setSelectedCategories] = useState([]);

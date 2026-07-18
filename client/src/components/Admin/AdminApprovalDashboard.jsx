@@ -3,6 +3,7 @@ import TicketsPanel from "./TicketsPanel";
 import AdminApproval from "../Dashboard/AdminApproval";
 
 export default function AdminApprovalDashboard() {
+  //The Crop Requests is the ticket
   const [tab, setTab] = useState("tickets");
 
   return (

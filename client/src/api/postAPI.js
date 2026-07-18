@@ -62,6 +62,9 @@ export const getPendingPosts = async () => {
   return res.data;
 };
 
+
+//PUT is used as this decision is state transistion , and not some field changes
+//PATCH is used for partial updates
 export const approvePost = async (id) => {
   const res = await axios.put(`/posts/admin/${id}/approve`);
   return res.data;

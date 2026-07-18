@@ -54,6 +54,13 @@ const supportTicketSchema = new mongoose.Schema(
       enum: ["open", "in-progress", "resolved", "rejected"],
       default: "open",
     },
+    // Tracks whether the confirmation email was delivered after ticket creation.
+    // "pending" = not yet attempted, "sent" = delivered OK, "failed" = all retries exhausted
+    confirmationEmailStatus: {
+      type: String,
+      enum: ["pending", "sent", "failed"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );
