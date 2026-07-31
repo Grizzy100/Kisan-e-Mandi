@@ -23,21 +23,6 @@ const postSchema = new mongoose.Schema(
     },
     imageUrl: { type: String }, // legacy
 
-    // ── Crop metadata (for item-listing flow) ──────────────────
-    cropType: { type: String, trim: true },
-    cropName: { type: String, trim: true },
-    price: { type: Number },
-
-    // ── Admin approval ─────────────────────────────────────────
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "approved",
-    },
-    rejectionReason: { type: String },
-    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    reviewedAt: { type: Date },
-
     // ── Social ─────────────────────────────────────────────────
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],

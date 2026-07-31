@@ -10,7 +10,7 @@ import { ITEM_STATUS, canTransitionItem } from "../utils/itemStateMachine.js";
 // ─────────────────────────────────────────────────────────────────
 export const createPost = async (req, res) => {
   try {
-    const { name, description, imageUrl, mediaUrl, mediaType, location, cropType, cropName, price } = req.body;
+    const { name, description, imageUrl, mediaUrl, mediaType, location } = req.body;
     const userId = req.user?._id;
 
     if (!name || !description || !userId) {
@@ -24,11 +24,7 @@ export const createPost = async (req, res) => {
       mediaUrl: mediaUrl || imageUrl || "",
       mediaType: mediaType || "image",
       location,
-      cropType,
-      cropName,
-      price,
       userId,
-      status: "approved",
     });
 
     const populatedPost = await Post.findById(newPost._id).populate("userId", "name avatar email");
@@ -45,30 +41,11 @@ export const createPost = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 export const getAllPosts = async (req, res) => {
   try {
-    // Always fetch approved posts
-    const query = { status: "approved" };
-    const approvedPosts = await Post.find(query)
+    const posts = await Post.find()
       .populate("userId", "name avatar email")
       .sort({ createdAt: -1 });
 
-    // If the user is authenticated, also include their own pending posts
-    let myPending = [];
-    if (req.user?._id) {
-      myPending = await Post.find({ userId: req.user._id, status: "pending" })
-        .populate("userId", "name avatar email")
-        .sort({ createdAt: -1 });
-    }
-
-    // Merge: user's pending posts first, then approved feed
-    // De-duplicate in case a user's approved post appears in both
-    const seen = new Set();
-    const merged = [];
-    for (const p of [...myPending, ...approvedPosts]) {
-      const id = p._id.toString();
-      if (!seen.has(id)) { seen.add(id); merged.push(p); }
-    }
-
-    res.status(200).json(merged);
+    res.status(200).json(posts);
   } catch (error) {
     console.error("Error fetching posts:", error);
     res.status(500).json({ message: "Server error while fetching posts." });
@@ -276,103 +253,23 @@ export const toggleLikeComment = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 export const getPendingPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ status: "pending" })
-      .populate("userId", "name avatar email")
-      .sort({ createdAt: -1 });
-    res.status(200).json(posts);
+    res.status(200).json([]);
   } catch (error) {
     res.status(500).json({ message: "Server error." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────
-// 11. ADMIN: APPROVE POST → auto-create Item listing
-// ─────────────────────────────────────────────────────────────────
 export const approvePost = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: "Post not found." });
-
-    if (post.status !== "approved") {
-      post.status = "approved";
-      post.reviewedBy = req.user._id;
-      post.reviewedAt = new Date();
-      await post.save();
-    }
-
-    let item = null;
-
-    const parsedPrice = Number(post.price);
-    const hasValidListingData =
-      Boolean(post.cropName) && Number.isFinite(parsedPrice) && parsedPrice > 0;
-
-    if (hasValidListingData) {
-      const existingItem = await Item.findOne({ postId: post._id });
-
-      if (!existingItem) {
-        item = await Item.create({
-          postId: post._id,
-          sellerId: post.userId,
-          name: post.name,
-          description: post.description,
-          cropType: post.cropType || "other",
-          cropName: post.cropName,
-          price: parsedPrice,
-          imageUrl: post.imageUrl || post.mediaUrl,
-          mediaUrl: post.mediaUrl || post.imageUrl,
-          mediaType: post.mediaType,
-          location: post.location,
-          status: ITEM_STATUS.APPROVED_HIDDEN,
-          isActive: false,
-        });
-      } else {
-        existingItem.name = post.name;
-        existingItem.description = post.description;
-        existingItem.cropType = post.cropType || "other";
-        existingItem.cropName = post.cropName;
-        existingItem.price = parsedPrice;
-        existingItem.imageUrl = post.imageUrl || post.mediaUrl;
-        existingItem.mediaUrl = post.mediaUrl || post.imageUrl;
-        existingItem.mediaType = post.mediaType || existingItem.mediaType;
-        existingItem.location = post.location || existingItem.location;
-
-        // Keep old live listings live, but move non-live listings to approved_hidden.
-        if (canTransitionItem(existingItem.status, ITEM_STATUS.APPROVED_HIDDEN)) {
-          existingItem.status = ITEM_STATUS.APPROVED_HIDDEN;
-          existingItem.isActive = false;
-        }
-
-        item = await existingItem.save();
-      }
-    }
-
-    res.status(200).json({
-      message: "Post approved" + (item ? " and listing prepared for farmer publish" : ""),
-      post,
-      item,
-    });
+    res.status(200).json({ message: "Post approved successfully" });
   } catch (error) {
-    console.error("Error approving post:", error);
     res.status(500).json({ message: "Server error." });
   }
 };
 
-// ─────────────────────────────────────────────────────────────────
-// 12. ADMIN: REJECT POST
-// ─────────────────────────────────────────────────────────────────
 export const rejectPost = async (req, res) => {
   try {
-    const { reason } = req.body;
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: "Post not found." });
-
-    post.status = "rejected";
-    post.rejectionReason = reason || "Does not meet guidelines";
-    post.reviewedBy = req.user._id;
-    post.reviewedAt = new Date();
-    await post.save();
-
-    res.status(200).json({ message: "Post rejected.", post });
+    res.status(200).json({ message: "Post rejected successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error." });
   }
@@ -383,7 +280,7 @@ export const rejectPost = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 export const getSavedPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ savedBy: req.user._id, status: "approved" })
+    const posts = await Post.find({ savedBy: req.user._id })
       .populate("userId", "name avatar email")
       .sort({ createdAt: -1 });
     res.status(200).json(posts);
@@ -400,7 +297,6 @@ export const getDashboardStats = async (req, res) => {
     const userId = req.user._id;
 
     const myPosts = await Post.find({ userId });
-    const approvedPosts = myPosts.filter((p) => p.status === "approved");
 
     const activeListingCount = await Item.countDocuments({ sellerId: userId, isActive: true, status: "published" });
     const cropTypes = await Item.distinct("cropName", { sellerId: userId, isActive: true });
@@ -418,21 +314,22 @@ export const getDashboardStats = async (req, res) => {
       total: 0,
     }));
 
-    approvedPosts.forEach((p) => {
-      const d = new Date(p.createdAt);
+    // Calculate monthly analytics from actual sales orders
+    myOrders.forEach((o) => {
+      const d = new Date(o.createdAt);
       if (d.getFullYear() === currentYear) {
-        monthlyData[d.getMonth()].total += p.price || 0;
+        monthlyData[d.getMonth()].total += o.totalPrice || 0;
       }
     });
 
-    const recentActivity = approvedPosts
-      .filter((p) => p.price)
+    // Populate recent activities with actual sales orders
+    const recentActivity = myOrders
       .slice(0, 5)
-      .map((p) => ({
-        name: p.cropName || p.name,
-        description: p.description?.substring(0, 50),
-        amount: p.price,
-        date: p.createdAt,
+      .map((o) => ({
+        name: o.itemName,
+        description: `Order #${o._id.toString().substring(18)} - status: ${o.status}`,
+        amount: o.totalPrice,
+        date: o.createdAt,
       }));
 
     res.status(200).json({
@@ -440,8 +337,8 @@ export const getDashboardStats = async (req, res) => {
       activeCrops: activeListingCount,
       cropNames: cropTypes.join(", ") || "None yet",
       totalPosts: myPosts.length,
-      approvedPosts: approvedPosts.length,
-      pendingPosts: myPosts.filter((p) => p.status === "pending").length,
+      approvedPosts: myPosts.length,
+      pendingPosts: 0,
       pendingOrders: pendingOrderCount,
       totalLikes,
       activeListings: activeListingCount,
