@@ -5,7 +5,7 @@ import {
   FaLeaf,
   FaSeedling,
 } from 'react-icons/fa';
-import HImg from '../assets/HeroImg.png';
+import HImg from '../assets/HeroImg.webp';
 import bgLogo from '../assets/greenBg.jpg';
 
 const Hero = () => {
@@ -28,7 +28,11 @@ const Hero = () => {
           <div className="flex justify-center md:justify-start">
             <img
               src={HImg}
-              alt="Hero Visual"
+              alt="Kisan-e-Mandi agricultural marketplace connecting farmers and buyers"
+              width={558}
+              height={556}
+              fetchPriority="high"
+              decoding="sync"
               className="h-[300px] sm:h-[350px] md:h-[400px] lg:h-[600px] w-auto rounded-xl shadow-xl transition-all duration-300"
             />
           </div>
@@ -50,8 +54,8 @@ const Hero = () => {
             </div>
 
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 leading-relaxed max-w-lg mx-auto md:mx-0">
-              We're building a platform where farmers are heard, valued, and
-              paid what they deserve – without exploitation or hidden middlemen.
+              Kisan-e-Mandi is an online mandi connecting farmers and buyers,
+              helping farmers sell their produce without exploitation or hidden middlemen.
             </p>
 
             <div className="flex flex-col md:flex-row gap-4 pt-4 mb-6 items-center md:items-start">

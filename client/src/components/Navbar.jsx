@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { FiHome, FiLayers, FiHelpCircle, FiPhone, FiInfo } from "react-icons/fi";
-import Klogo from "../assets/KisanLogo.png";
+import Klogo from "../assets/KisanLogo.webp";
 
 const navLinks = [
   { name: "Home", path: "/", icon: <FiHome /> },
@@ -61,7 +61,7 @@ const Navbar = ({ hasPassedHero }) => {
       {/* Tablet */}
       <div className="hidden sm:flex md:hidden w-full items-center justify-between mt-5 px-6">
         <Link to="/" className="flex items-center">
-          <img src={Klogo} alt="Kisan Logo" className="h-16 w-auto" />
+          <img src={Klogo} alt="Kisan Logo" width={240} height={189} className="h-16 w-auto" />
         </Link>
         <div className="flex space-x-6">
           {navLinks.map(({ name, path }) => (
@@ -89,7 +89,7 @@ const Navbar = ({ hasPassedHero }) => {
       {/* Desktop */}
       <div className="hidden md:flex w-full items-center justify-between px-10 mt-5">
         <Link to="/" className="flex items-center">
-          <img src={Klogo} alt="Kisan Logo" className="h-20 w-auto" />
+          <img src={Klogo} alt="Kisan Logo" width={240} height={189} className="h-20 w-auto" />
         </Link>
         <div className="flex space-x-8">
           {navLinks.map(({ name, path }) => (

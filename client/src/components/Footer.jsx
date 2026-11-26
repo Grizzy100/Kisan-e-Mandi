@@ -9,9 +9,10 @@ import {
   FaMapMarkerAlt,
 } from 'react-icons/fa';
 
-import GooglePlayIcon from "../assets/googlePaly.png";
-import P1 from "../assets/Phone1.png";
-import P2 from "../assets/Phone2.png";
+import GooglePlayIcon from "../assets/googlePaly.webp";
+import P1 from "../assets/Phone1.webp";
+import P2 from "../assets/Phone2.webp";
+import KisanIcon from "../assets/Kisan.webp";
 
 const Footer = () => {
   return (
@@ -27,11 +28,19 @@ const Footer = () => {
                 <img
                   src={P1}
                   alt="Phone 1"
+                  width={375}
+                  height={812}
+                  loading="lazy"
+                  decoding="async"
                   className="absolute top-5 left-30 w-40 h-85 rounded-2xl opacity-100 z-0"
                 />
                 <img
                   src={P2}
                   alt="Phone 2"
+                  width={383}
+                  height={820}
+                  loading="lazy"
+                  decoding="async"
                   className="absolute top-8 right-16 w-40 h-78 rounded-4xl opacity-100 z-0"
                 />
               </div>
@@ -46,7 +55,7 @@ const Footer = () => {
               {/* Button Section for lg */}
               <div className="hidden lg:flex mt-4 ml-10 flex-col sm:flex-row gap-4">
                 <button className="w-40 h-14 bg-black text-white rounded-xl flex items-center px-3 hover:bg-gray-800 transition-colors">
-                  <img src={GooglePlayIcon} alt="Google Play Icon" className="h-7 w-11 mr-3" />
+                  <img src={GooglePlayIcon} alt="Google Play Icon" width={128} height={72} loading="lazy" decoding="async" className="h-7 w-11 mr-3" />
                   <div className="flex flex-col items-start leading-tight">
                     <span className="text-xs">Get it on</span>
                     <span className="text-sm font-semibold">Google Play</span>
@@ -64,7 +73,7 @@ const Footer = () => {
               {/* Button Section for md only */}
               <div className="hidden md:flex lg:hidden z-10 order-2 mt-6 flex-col sm:flex-row gap-4 justify-center absolute bottom-4 left-1/2 transform -translate-x-1/2">
                 <button className="w-36 h-12 bg-black text-white rounded-xl flex items-center px-2 hover:bg-gray-800 transition-colors">
-                  <img src={GooglePlayIcon} alt="Google Play Icon" className="h-6 w-8 mr-2" />
+                  <img src={GooglePlayIcon} alt="Google Play Icon" width={128} height={72} loading="lazy" decoding="async" className="h-6 w-8 mr-2" />
                   <div className="flex flex-col items-start leading-tight text-left">
                     <span className="text-[11px]">Get it on</span>
                     <span className="text-sm font-semibold">Google Play</span>
@@ -82,7 +91,7 @@ const Footer = () => {
               {/* ✅ Button Section for sm and less */}
               <div className="flex md:hidden lg:hidden z-10 order-2 mt-6 flex-row gap-2 justify-center absolute bottom-4 left-1/2 transform -translate-x-1/2 px-2">
                 <button className="w-28 h-10 bg-black text-white rounded-xl flex items-center px-2 hover:bg-gray-800 transition-colors">
-                  <img src={GooglePlayIcon} alt="Google Play Icon" className="h-4 w-4 mr-1" />
+                  <img src={GooglePlayIcon} alt="Google Play Icon" width={128} height={72} loading="lazy" decoding="async" className="h-4 w-4 mr-1" />
                   <div className="flex flex-col items-start leading-tight text-[9px]">
                     <span>Get it on</span>
                     <span className="text-[10px] font-semibold">Google Play</span>
@@ -103,11 +112,19 @@ const Footer = () => {
               <img
                 src={P1}
                 alt="Phone 1"
+                width={375}
+                height={812}
+                loading="lazy"
+                decoding="async"
                 className="absolute -top-5 right-10 w-50 h-132 z-0 rounded-2xl opacity-100"
               />
               <img
                 src={P2}
                 alt="Phone 2"
+                width={383}
+                height={820}
+                loading="lazy"
+                decoding="async"
                 className="absolute top-4 right-28 w-60 h-120 z-0 rounded-4xl opacity-100"
               />
             </div>
@@ -121,7 +138,7 @@ const Footer = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <img src="/Kisan.png" alt="Kisan-e-mandi Logo" className="w-8 h-8 rounded-lg" />
+                <img src={KisanIcon} alt="Kisan-e-mandi Logo" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8 rounded-lg" />
                 <span className="text-xl font-bold text-gray-800 font-sora">Kisan-e-mandi</span>
               </div>
               <p className="text-sm text-gray-600 mb-4 font-sora">©2025 FarmCorps by Paul, Inc.</p>
