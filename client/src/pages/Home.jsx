@@ -7,6 +7,34 @@ const Services = lazy(() => import("../components/Services"));
 const Testimonial = lazy(() => import("../components/Testimonial"));
 const Footer = lazy(() => import("../components/Footer"));
 
+const LazyOnView = ({ children, minHeight = 400 }) => {
+  const ref = useRef(null);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShow(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -1px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const placeholder = <div style={{ minHeight }} />;
+  return (
+    <div ref={ref}>
+      {show ? <Suspense fallback={placeholder}>{children}</Suspense> : placeholder}
+    </div>
+  );
+};
+
 const Home = () => {
   const heroRef = useRef(null);
   const [hasPassedHero, setHasPassedHero] = useState(false);
@@ -16,16 +44,19 @@ const Home = () => {
     let rafId;
     let cancelled = false;
 
-    import("lenis").then(({ default: Lenis }) => {
-      if (cancelled) return;
-      lenis = new Lenis();
-      function raf(time) {
+    // Only load Lenis smooth scrolling on desktop/tablet viewports
+    if (window.innerWidth >= 768) {
+      import("lenis").then(({ default: Lenis }) => {
         if (cancelled) return;
-        lenis.raf(time);
+        lenis = new Lenis();
+        function raf(time) {
+          if (cancelled) return;
+          lenis.raf(time);
+          rafId = requestAnimationFrame(raf);
+        }
         rafId = requestAnimationFrame(raf);
-      }
-      rafId = requestAnimationFrame(raf);
-    });
+      });
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -58,11 +89,15 @@ const Home = () => {
         <div ref={heroRef}>
           <Hero />
         </div>
-        <Suspense fallback={null}>
+        <LazyOnView minHeight={600}>
           <Services />
+        </LazyOnView>
+        <LazyOnView minHeight={600}>
           <Testimonial />
+        </LazyOnView>
+        <LazyOnView minHeight={600}>
           <Footer />
-        </Suspense>
+        </LazyOnView>
       </main>
     </div>
   );

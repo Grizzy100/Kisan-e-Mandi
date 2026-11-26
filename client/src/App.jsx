@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 // Home is imported eagerly so the LCP element renders without a chunk-fetch waterfall
@@ -102,12 +102,21 @@ const LayoutWithNavbar = ({ children }) => {
 };
 
 const App = () => {
+  const [mountToast, setMountToast] = useState(false);
+
+  useEffect(() => {
+    const id = setTimeout(() => setMountToast(true), 2000);
+    return () => clearTimeout(id);
+  }, []);
+
   return (
     <Router>
       <CartProvider>
-        <Suspense fallback={null}>
-          <AppToast />
-        </Suspense>
+        {mountToast && (
+          <Suspense fallback={null}>
+            <AppToast />
+          </Suspense>
+        )}
         <LayoutWithNavbar>
           <div className="font-inria bg-background text-foreground min-h-screen">
             <Suspense fallback={
