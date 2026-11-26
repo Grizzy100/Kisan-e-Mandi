@@ -1,23 +1,31 @@
-import React, { useEffect, useRef, useState } from "react";
-import Lenis from "lenis";
+import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
-import Services from "../components/Services";
-import Testimonial from "../components/Testimonial";
 
-import Footer from "../components/Footer";
+// Lazy-load below-the-fold sections so framer-motion and footer assets don't block LCP
+const Services = lazy(() => import("../components/Services"));
+const Testimonial = lazy(() => import("../components/Testimonial"));
+const Footer = lazy(() => import("../components/Footer"));
 
 const Home = () => {
   const heroRef = useRef(null);
   const [hasPassedHero, setHasPassedHero] = useState(false);
 
   useEffect(() => {
-    const lenis = new Lenis();
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
+    let lenis;
+    let rafId;
+    let cancelled = false;
+
+    import("lenis").then(({ default: Lenis }) => {
+      if (cancelled) return;
+      lenis = new Lenis();
+      function raf(time) {
+        if (cancelled) return;
+        lenis.raf(time);
+        rafId = requestAnimationFrame(raf);
+      }
+      rafId = requestAnimationFrame(raf);
+    });
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -33,7 +41,9 @@ const Home = () => {
     }
 
     return () => {
-      lenis.destroy();
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (lenis) lenis.destroy();
       if (heroRef.current) {
         observer.unobserve(heroRef.current);
       }
@@ -48,9 +58,11 @@ const Home = () => {
         <div ref={heroRef}>
           <Hero />
         </div>
-        <Services />
-        <Testimonial />
-        <Footer />
+        <Suspense fallback={null}>
+          <Services />
+          <Testimonial />
+          <Footer />
+        </Suspense>
       </main>
     </div>
   );
