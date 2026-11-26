@@ -12,6 +12,7 @@ import {
 import FarmerLogo from "../assets/farmer.png";
 import Klogo from "../assets/KisanLogo.png";
 import axiosInstance from "../api/axios";
+import { trackSignUp } from "../utils/analytics";
 
 const RESEND_COOLDOWN = 45;
 const MAX_RESENDS = 3;
@@ -99,6 +100,9 @@ export default function VerifyOTP() {
             if (res.status === 200) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
+                if (context === "register") {
+                    trackSignUp("phone");
+                }
                 toast.success(
                     context === "register" ? "Registered & logged in!" : "Logged in!"
                 );

@@ -3,6 +3,7 @@ import { MdClose, MdShoppingBasket, MdDeleteOutline, MdCheckCircle, MdAdd, MdRem
 import { useCart } from '../../context/CartContext';
 import axiosInstance from '../../api/axios';
 import { toast } from 'react-toastify';
+import { trackPurchase } from '../../utils/analytics';
 
 export const CartDrawer = () => {
   const { cartItems, isCartOpen, closeCart, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
@@ -19,9 +20,12 @@ export const CartDrawer = () => {
     }
 
     setIsCheckingOut(true);
+    const purchasedItems = [...cartItems];
+    const purchaseValue = cartTotal;
+
     try {
       // Create an order for each item in the cart
-      const orderPromises = cartItems.map(item => 
+      const orderPromises = purchasedItems.map(item => 
         axiosInstance.post('/orders', {
           itemId: item.id,
           sellerId: item.sellerId,
@@ -31,8 +35,17 @@ export const CartDrawer = () => {
         })
       );
       
-      await Promise.all(orderPromises);
-      
+      const responses = await Promise.all(orderPromises);
+      const orderIds = responses
+        .map(res => res?.data?.order?._id)
+        .filter(Boolean);
+
+      trackPurchase({
+        transactionId: orderIds.length > 0 ? orderIds.join(',') : undefined,
+        value: purchaseValue,
+        items: purchasedItems,
+      });
+
       setOrderPlaced(true);
       clearCart();
     } catch (error) {

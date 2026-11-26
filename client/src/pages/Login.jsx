@@ -11,6 +11,7 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import FarmerLogo from "../assets/farmer.png";
 import Klogo from "../assets/KisanLogo.png";
 import axiosInstance from "../api/axios";
+import { trackLogin } from "../utils/analytics";
 
 // Redirects logged-in users to the correct dashboard depending on whether they are an Admin or a User/Farmer
 const redirectByRole = (user, navigate) => {
@@ -84,6 +85,7 @@ const Login = () => {
     if (ok) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      trackLogin("email");
       toast.success("Logged in!");
       redirectByRole(data.user, navigate);
     } else if (!ok && data?.message?.toLowerCase().includes("verify your email")) {
@@ -122,6 +124,7 @@ const Login = () => {
     if (ok) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      trackLogin("google");
       toast.success("Google sign-in successful");
       redirectByRole(data.user, navigate);
     } else {

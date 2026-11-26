@@ -15,6 +15,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import FarmerLogo from "../assets/farmer.png";
 import Klogo from "../assets/KisanLogo.png";
 import axiosInstance from "../api/axios";
+import { trackSignUp } from "../utils/analytics";
 
 const redirectByRole = (user, navigate) => {
     if (user.role === "admin") navigate("/admin/dashboard");
@@ -118,6 +119,7 @@ const Register = () => {
         setLoading(false);
 
         if (ok) {
+            trackSignUp("email");
             toast.success(data.message || "Registered! Please check your email to verify your account.");
             navigate("/login");
         } else {
@@ -222,6 +224,7 @@ const Register = () => {
         if (ok) {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
+            trackSignUp("google");
             toast.success("Google sign-in successful");
             redirectByRole(data.user, navigate);
         } else {

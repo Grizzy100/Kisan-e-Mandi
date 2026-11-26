@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { trackAddToCart } from '../utils/analytics';
 
 const notify = (type, msg, opts) =>
   import('react-toastify').then(({ toast }) => toast[type](msg, opts));
@@ -18,6 +19,8 @@ export const CartProvider = ({ children }) => {
     }
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const cartItemsRef = useRef(cartItems);
+  cartItemsRef.current = cartItems;
 
 
   //main job is to sync React and local browser for the cart items being updated, removed, added
@@ -26,31 +29,34 @@ export const CartProvider = ({ children }) => {
   }, [cartItems]);
 
   const addToCart = useCallback((product) => {
-    setCartItems(prevItems => {
-      const existing = prevItems.find(item => item.id === product.id);
-      
-      if (existing) {
-        if (existing.cartQuantity >= product.quantity) {
-          notify('error', `Only ${product.quantity} ${product.unit} available in stock!`, { toastId: `max-${product.id}` });
-          return prevItems;
-        }
+    const existing = cartItemsRef.current.find(item => item.id === product.id);
 
-        notify('info', `Increased quantity of ${product.name}`, { toastId: `inc-${product.id}` });
-        
-        return prevItems.map(item => 
-          item.id === product.id 
+    if (existing) {
+      if (existing.cartQuantity >= product.quantity) {
+        notify('error', `Only ${product.quantity} ${product.unit} available in stock!`, { toastId: `max-${product.id}` });
+        return;
+      }
+
+      setCartItems(prevItems =>
+        prevItems.map(item =>
+          item.id === product.id
             ? { ...item, cartQuantity: item.cartQuantity + 1 }
             : item
-        );
-      } else {
-        if (product.quantity < product.minOrderQuantity) {
-          notify('error', `Not enough stock to meet minimum order of ${product.minOrderQuantity}!`);
-          return prevItems;
-        }
-        notify('success', `${product.name} added to basket`, { toastId: `add-${product.id}` });
-        return [...prevItems, { ...product, cartQuantity: product.minOrderQuantity }];
+        )
+      );
+      notify('info', `Increased quantity of ${product.name}`, { toastId: `inc-${product.id}` });
+      trackAddToCart(product, 1);
+    } else {
+      const minQty = product.minOrderQuantity || 1;
+      if (product.quantity < minQty) {
+        notify('error', `Not enough stock to meet minimum order of ${product.minOrderQuantity}!`);
+        return;
       }
-    });
+
+      setCartItems(prevItems => [...prevItems, { ...product, cartQuantity: minQty }]);
+      notify('success', `${product.name} added to basket`, { toastId: `add-${product.id}` });
+      trackAddToCart(product, minQty);
+    }
   }, []);
 
   const updateQuantity = useCallback((productId, newQuantity) => {
