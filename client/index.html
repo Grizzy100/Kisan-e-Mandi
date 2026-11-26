@@ -48,7 +48,15 @@
     />
 
     <!-- LCP preload: hero image fetched before JS runs -->
-    <link rel="preload" as="image" href="/HeroImg.webp" type="image/webp" fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href="/HeroImg.webp"
+      imagesrcset="/HeroImg-mobile.webp 360w, /HeroImg.webp 558w"
+      imagesizes="(max-width: 640px) 360px, 558px"
+      type="image/webp"
+      fetchpriority="high"
+    />
 
     <!-- Favicon and Font -->
     <link rel="icon" type="image/png" href="/Kisan.png" />

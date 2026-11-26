@@ -30,6 +30,8 @@ const Hero = () => {
           <div className="flex justify-center md:justify-start">
             <img
               src={HImg}
+              srcSet="/HeroImg-mobile.webp 360w, /HeroImg.webp 558w"
+              sizes="(max-width: 640px) 360px, 558px"
               alt="Kisan-e-Mandi agricultural marketplace connecting farmers and buyers"
               width={558}
               height={556}

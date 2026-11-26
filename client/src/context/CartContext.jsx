@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
-import { toast } from 'react-toastify';
+
+const notify = (type, msg, opts) =>
+  import('react-toastify').then(({ toast }) => toast[type](msg, opts));
 
 const CartContext = createContext();
 
@@ -29,11 +31,11 @@ export const CartProvider = ({ children }) => {
       
       if (existing) {
         if (existing.cartQuantity >= product.quantity) {
-          toast.error(`Only ${product.quantity} ${product.unit} available in stock!`, { toastId: `max-${product.id}` });
+          notify('error', `Only ${product.quantity} ${product.unit} available in stock!`, { toastId: `max-${product.id}` });
           return prevItems;
         }
 
-        toast.info(`Increased quantity of ${product.name}`, { toastId: `inc-${product.id}` });
+        notify('info', `Increased quantity of ${product.name}`, { toastId: `inc-${product.id}` });
         
         return prevItems.map(item => 
           item.id === product.id 
@@ -42,10 +44,10 @@ export const CartProvider = ({ children }) => {
         );
       } else {
         if (product.quantity < product.minOrderQuantity) {
-          toast.error(`Not enough stock to meet minimum order of ${product.minOrderQuantity}!`);
+          notify('error', `Not enough stock to meet minimum order of ${product.minOrderQuantity}!`);
           return prevItems;
         }
-        toast.success(`${product.name} added to basket`, { toastId: `add-${product.id}` });
+        notify('success', `${product.name} added to basket`, { toastId: `add-${product.id}` });
         return [...prevItems, { ...product, cartQuantity: product.minOrderQuantity }];
       }
     });
@@ -59,12 +61,12 @@ export const CartProvider = ({ children }) => {
         const minQ = item.minOrderQuantity || 1;
         
         if (newQuantity < minQ) {
-          toast.warning(`Minimum order is ${minQ} ${item.unit}`, { toastId: `min-${item.id}` });
+          notify('warning', `Minimum order is ${minQ} ${item.unit}`, { toastId: `min-${item.id}` });
           return { ...item, cartQuantity: minQ };
         }
         
         if (newQuantity > item.quantity) {
-          toast.error(`Only ${item.quantity} ${item.unit} available in stock!`, { toastId: `max-${item.id}` });
+          notify('error', `Only ${item.quantity} ${item.unit} available in stock!`, { toastId: `max-${item.id}` });
           return { ...item, cartQuantity: item.quantity };
         }
         return { ...item, cartQuantity: newQuantity };

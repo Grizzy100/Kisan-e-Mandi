@@ -14,8 +14,7 @@ const VerifyOTP = lazy(() => import("./pages/VerifyOTP.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Blog = lazy(() => import("./pages/Blog.jsx"));
 
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+const AppToast = lazy(() => import("./components/AppToast.jsx"));
 import Navbar from "./components/Navbar.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 
@@ -42,15 +41,15 @@ const VerifyEmail = () => {
           if (ok) {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
-            toast.success("Email verified! You are now logged in.");
+            import("react-toastify").then(({ toast }) => toast.success("Email verified! You are now logged in."));
             navigate("/dashboard");
           } else {
-            toast.error(data.message || "Invalid or expired verification link");
+            import("react-toastify").then(({ toast }) => toast.error(data.message || "Invalid or expired verification link"));
             navigate("/login");
           }
         })
         .catch(() => {
-          toast.error("Error verifying email");
+          import("react-toastify").then(({ toast }) => toast.error("Error verifying email"));
           navigate("/login");
         });
     } else {
@@ -106,7 +105,9 @@ const App = () => {
   return (
     <Router>
       <CartProvider>
-        <ToastContainer theme="dark" />
+        <Suspense fallback={null}>
+          <AppToast />
+        </Suspense>
         <LayoutWithNavbar>
           <div className="font-inria bg-background text-foreground min-h-screen">
             <Suspense fallback={
