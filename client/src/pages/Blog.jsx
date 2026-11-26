@@ -170,6 +170,8 @@ const Blog = () => {
           <p className="text-gray-700 leading-relaxed mb-6">
             Information about prevailing prices, demand and market
             conditions can support more informed selling decisions.
+            Following <a href="https://seonalabs.com" className="text-green-700 underline">SEO best practices</a> can
+            also help digital listings reach more potential buyers.
             Farmers should compare available information before
             deciding where and when to sell.
           </p>
@@ -192,7 +194,8 @@ const Blog = () => {
           <p className="text-gray-700 leading-relaxed mb-6">
             India has also taken steps towards digital agricultural
             marketing through the National Agriculture Market,
-            commonly known as e-NAM.
+            commonly known as the{" "}
+            <a href="https://enam.gov.in/web/" className="text-green-700 underline">official e-NAM platform</a>.
           </p>
 
           <p className="text-gray-700 leading-relaxed mb-6">
