@@ -1,0 +1,4 @@
+﻿User-agent: *
+Allow: /
+
+Sitemap: https://kisan-e-mandi.vercel.app/sitemap.xml
