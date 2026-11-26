@@ -80,10 +80,12 @@
       gtag("js", new Date());
       gtag("config", "G-2BY3MCLK98");
       window.addEventListener("load", function () {
-        var s = document.createElement("script");
-        s.async = true;
-        s.src = "https://www.googletagmanager.com/gtag/js?id=G-2BY3MCLK98";
-        document.head.appendChild(s);
+        setTimeout(function () {
+          var s = document.createElement("script");
+          s.async = true;
+          s.src = "https://www.googletagmanager.com/gtag/js?id=G-2BY3MCLK98";
+          document.head.appendChild(s);
+        }, 3000);
       });
     </script>
 

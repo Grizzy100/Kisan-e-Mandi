@@ -105,7 +105,7 @@ const App = () => {
   const [mountToast, setMountToast] = useState(false);
 
   useEffect(() => {
-    const id = setTimeout(() => setMountToast(true), 2000);
+    const id = setTimeout(() => setMountToast(true), 4000);
     return () => clearTimeout(id);
   }, []);
 
