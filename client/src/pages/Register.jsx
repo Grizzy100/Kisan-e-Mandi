@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { auth } from "../config/firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import FarmerLogo from "../assets/farmer.png";
@@ -445,10 +445,12 @@ const Register = () => {
                     <div className="my-1 text-center text-xs text-gray-400">or continue with</div>
 
                     <div className="flex justify-center">
-                        <GoogleLogin
-                            onSuccess={handleGoogleSuccess}
-                            onError={() => toast.error("Google registration failed")}
-                        />
+                        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => toast.error("Google registration failed")}
+                            />
+                        </GoogleOAuthProvider>
                     </div>
                 </div>
 

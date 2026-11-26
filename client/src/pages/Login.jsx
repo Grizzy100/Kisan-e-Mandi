@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import FarmerLogo from "../assets/farmer.png";
 import Klogo from "../assets/KisanLogo.png";
 import axiosInstance from "../api/axios";
@@ -247,10 +247,12 @@ const Login = () => {
           </div>
 
           <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error("Google login failed")}
-            />
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => toast.error("Google login failed")}
+              />
+            </GoogleOAuthProvider>
           </div>
 
         </div>

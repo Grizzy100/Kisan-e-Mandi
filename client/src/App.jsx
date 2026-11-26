@@ -1,6 +1,5 @@
 import React, { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // Home is imported eagerly so the LCP element renders without a chunk-fetch waterfall
 import Home from "./pages/Home.jsx";
@@ -21,7 +20,6 @@ import Navbar from "./components/Navbar.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // Email Verification Route (hit when user clicks link in email)
@@ -106,9 +104,8 @@ const LayoutWithNavbar = ({ children }) => {
 
 const App = () => {
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <Router>
-        <CartProvider>
+    <Router>
+      <CartProvider>
         <ToastContainer theme="dark" />
         <LayoutWithNavbar>
           <div className="font-inria bg-background text-foreground min-h-screen">
@@ -154,9 +151,8 @@ const App = () => {
             </Suspense>
           </div>
         </LayoutWithNavbar>
-        </CartProvider>
-      </Router>
-    </GoogleOAuthProvider>
+      </CartProvider>
+    </Router>
   );
 };
 
