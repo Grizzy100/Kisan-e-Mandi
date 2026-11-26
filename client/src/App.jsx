@@ -11,6 +11,9 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP.jsx"));
+const About = lazy(() => import("./pages/About.jsx"));
+
+
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar.jsx";
@@ -122,6 +125,8 @@ const App = () => {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/learn-more" element={<Navigate to="/about" replace />} />
 
                 <Route
                   path="/dashboard/*"
