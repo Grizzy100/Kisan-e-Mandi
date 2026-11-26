@@ -12,7 +12,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
 const VerifyOTP = lazy(() => import("./pages/VerifyOTP.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
-
+const Blog = lazy(() => import("./pages/Blog.jsx"));
 
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -148,6 +148,7 @@ const App = () => {
                 />
 
                 <Route path="*" element={<div className="p-4 text-center text-red-600">404 - Page Not Found</div>} />
+                <Route path="/blog/online-agricultural-marketplace" element={<Blog />}/>
               </Routes>
             </Suspense>
           </div>
