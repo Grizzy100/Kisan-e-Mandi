@@ -41,7 +41,7 @@ export const CartDrawer = () => {
         .filter(Boolean);
 
       trackPurchase({
-        transactionId: orderIds.length > 0 ? orderIds.join(',') : undefined,
+        transactionId: orderIds.length === 1 ? orderIds[0] : undefined,
         value: purchaseValue,
         items: purchasedItems,
       });

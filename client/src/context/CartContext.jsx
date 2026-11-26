@@ -29,7 +29,8 @@ export const CartProvider = ({ children }) => {
   }, [cartItems]);
 
   const addToCart = useCallback((product) => {
-    const existing = cartItemsRef.current.find(item => item.id === product.id);
+    const currentItems = cartItemsRef.current;
+    const existing = currentItems.find(item => item.id === product.id);
 
     if (existing) {
       if (existing.cartQuantity >= product.quantity) {
@@ -37,13 +38,13 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
-      setCartItems(prevItems =>
-        prevItems.map(item =>
-          item.id === product.id
-            ? { ...item, cartQuantity: item.cartQuantity + 1 }
-            : item
-        )
+      const nextItems = currentItems.map(item =>
+        item.id === product.id
+          ? { ...item, cartQuantity: item.cartQuantity + 1 }
+          : item
       );
+      cartItemsRef.current = nextItems;
+      setCartItems(nextItems);
       notify('info', `Increased quantity of ${product.name}`, { toastId: `inc-${product.id}` });
       trackAddToCart(product, 1);
     } else {
@@ -53,7 +54,9 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
-      setCartItems(prevItems => [...prevItems, { ...product, cartQuantity: minQty }]);
+      const nextItems = [...currentItems, { ...product, cartQuantity: minQty }];
+      cartItemsRef.current = nextItems;
+      setCartItems(nextItems);
       notify('success', `${product.name} added to basket`, { toastId: `add-${product.id}` });
       trackAddToCart(product, minQty);
     }
