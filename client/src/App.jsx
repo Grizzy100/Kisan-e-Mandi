@@ -2,7 +2,8 @@ import React, { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-const Home = lazy(() => import("./pages/Home.jsx"));
+// Home is imported eagerly so the LCP element renders without a chunk-fetch waterfall
+import Home from "./pages/Home.jsx";
 const Login = lazy(() => import("./pages/Login.jsx"));
 const Register = lazy(() => import("./pages/Register.jsx"));
 const MainDashboard = lazy(() => import("./pages/MainDashboard.jsx"));

@@ -43,6 +43,8 @@ const Navbar = ({ hasPassedHero }) => {
       <div className="sm:hidden flex items-center justify-between mx-4 mt-4 px-4 py-2 rounded-full border border-white/30 backdrop-blur-md">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
           className={`transition-transform duration-300 ${navTextClass}`}
         >
           {menuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}

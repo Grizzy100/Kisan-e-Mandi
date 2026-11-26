@@ -5,34 +5,100 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="icon" type="image/svg+xml" href="/Kisan.png" />
+    <!-- Basic SEO -->
+    <title>Kisan-e-Mandi | Online Mandi for Farmers and Buyers</title>
+
+    <meta
+      name="description"
+      content="Kisan-e-Mandi connects farmers and buyers through an online mandi for fresh produce, farm equipment rentals, logistics support and market insights."
+    />
+
+    <meta name="robots" content="index, follow" />
+
+    <link
+      rel="canonical"
+      href="https://kisan-e-mandi.vercel.app/"
+    />
+
+    <!-- Open Graph Metadata -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Kisan-e-Mandi | Online Mandi for Farmers and Buyers"
+    />
+    <meta
+      property="og:description"
+      content="Explore an agricultural marketplace connecting farmers and buyers with fresh produce, equipment rentals and market insights."
+    />
+    <meta
+      property="og:url"
+      content="https://kisan-e-mandi.vercel.app/"
+    />
+    <meta property="og:site_name" content="Kisan-e-Mandi" />
+
+    <!-- Twitter Card Metadata -->
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Kisan-e-Mandi | Online Mandi for Farmers and Buyers"
+    />
+    <meta
+      name="twitter:description"
+      content="A digital agricultural marketplace connecting farmers and buyers."
+    />
+
+    <!-- LCP preload: hero image fetched before JS runs -->
+    <link rel="preload" as="image" href="/HeroImg.webp" type="image/webp" />
+
+    <!-- Favicon and Font -->
+    <link rel="icon" type="image/png" href="/Kisan.png" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inria+Serif&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
 
-    <!-- Google Search Console verification -->
+    <!-- Google Search Console Verification -->
     <meta
       name="google-site-verification"
       content="09BHOk5l009i-C5ZO_lONdwYwUhWtr0n7NT3uNdnOQI"
     />
 
-    <!-- Google Analytics 4 -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-2BY3MCLK98"
-    ></script>
-
+    <!-- Google Analytics 4: deferred until after page load so it does not block LCP -->
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
+      function gtag() { dataLayer.push(arguments); }
       gtag("js", new Date());
       gtag("config", "G-2BY3MCLK98");
+      window.addEventListener("load", function () {
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=G-2BY3MCLK98";
+        document.head.appendChild(s);
+      });
     </script>
 
-    <title>Kisan-e-Mandi</title>
+    <!-- Organization Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Kisan-e-Mandi",
+        "url": "https://kisan-e-mandi.vercel.app/",
+        "logo": "https://kisan-e-mandi.vercel.app/Kisan.png"
+      }
+    </script>
+
+    <!-- Website Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Kisan-e-Mandi",
+        "url": "https://kisan-e-mandi.vercel.app/"
+      }
+    </script>
   </head>
 
   <body>

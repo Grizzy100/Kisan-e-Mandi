@@ -84,7 +84,7 @@ const TestimonialCard = React.memo(({ testimonial }) => (
         <FaUser className="text-white text-[10px] sm:text-xs md:text-sm" />
       </div>
       <div>
-        <h4 className="font-semibold text-gray-800 text-xs sm:text-sm md:text-base">{testimonial.name}</h4>
+        <p className="font-semibold text-gray-800 text-xs sm:text-sm md:text-base">{testimonial.name}</p>
         <p className="text-[10px] sm:text-xs text-gray-500">{testimonial.username}</p>
       </div>
     </div>
@@ -96,7 +96,7 @@ const TestimonialCard = React.memo(({ testimonial }) => (
     <p className="text-gray-700 text-[11px] sm:text-sm md:text-base italic mb-2 sm:mb-3">
       {testimonial.content}
     </p>
-    <p className="text-[10px] sm:text-xs text-gray-400">{testimonial.date}</p>
+    <p className="text-[10px] sm:text-xs text-gray-500">{testimonial.date}</p>
   </div>
 ));
 
